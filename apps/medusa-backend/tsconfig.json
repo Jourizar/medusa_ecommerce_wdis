@@ -1,0 +1,12 @@
+{
+  "extends": "../../packages/config/tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "module": "ESNext"
+  },
+  "include": ["src", "medusa-config.ts"],
+  "exclude": ["node_modules", "dist"]
+}

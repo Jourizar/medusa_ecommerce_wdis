@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: medusa-postgres
+    environment:
+      POSTGRES_USER: medusa
+      POSTGRES_PASSWORD: medusa_password
+      POSTGRES_DB: medusa
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medusa -d medusa"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: medusa-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  medusa:
+    build:
+      context: ./apps/medusa-backend
+      dockerfile: Dockerfile
+    container_name: medusa-backend
+    environment:
+      DATABASE_URL: postgresql://medusa:medusa_password@postgres:5432/medusa
+      REDIS_URL: redis://redis:6379
+      MEDUSA_BACKEND_URL: http://localhost:9000
+      JWT_SECRET: change-me-in-production
+      COOKIE_SECRET: change-me-too
+      STORE_CORS: http://localhost:3000
+      ADMIN_CORS: http://localhost:5173,http://localhost:9000
+      AUTH_CORS: http://localhost:3000
+      STRIPE_API_KEY: sk_test_your_stripe_key
+      STRIPE_WEBHOOK_SECRET: whsec_your_webhook_secret
+      CONVEX_URL: https://your-project.convex.cloud
+      CONVEX_ADMIN_KEY: your_convex_admin_key
+    ports:
+      - "9000:9000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./apps/medusa-backend/uploads:/app/uploads
+
+volumes:
+  postgres_data:
+  redis_data:
