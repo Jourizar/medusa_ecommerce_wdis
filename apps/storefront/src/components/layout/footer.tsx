@@ -9,8 +9,8 @@ const FOOTER_LINKS = {
   ],
   account: [
     { label: "My Account", href: "/account" },
-    { label: "Orders", href: "/account" },
-    { label: "Wishlist", href: "/account" },
+    { label: "Orders", href: "/account/orders" },
+    { label: "Wishlist", href: "/account/wishlist" },
   ],
   support: [
     { label: "Contact Us", href: "#" },
@@ -79,7 +79,7 @@ export function Footer() {
             </h3>
             <ul className="space-y-2">
               {FOOTER_LINKS.support.map((link) => (
-                <li key={link.href}>
+                <li key={link.label}>
                   <Link
                     href={link.href}
                     className="text-sm text-text-muted hover:text-text transition-colors"

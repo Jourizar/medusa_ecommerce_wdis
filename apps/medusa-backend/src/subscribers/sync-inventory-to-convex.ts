@@ -57,7 +57,7 @@ export default async function inventoryUpdatedHandler({
 }
 
 export const config: SubscriberConfig = {
-  event: Modules.NOTIFICATION.EVENTS.INVENTORY_ITEM_UPDATED,
+  event: "inventory-item.updated",
   context: {
     subscriberId: "inventory-sync-to-convex",
   },

@@ -15,5 +15,10 @@
   "devDependencies": {
     "turbo": "^2.3.0"
   },
-  "packageManager": "npm@10.9.0"
+  "packageManager": "npm@10.9.0",
+  "dependencies": {
+    "@medusajs/draft-order": "^2.13.6",
+    "ajv": "^8.18.0",
+    "ts-node": "^10.9.2"
+  }
 }
