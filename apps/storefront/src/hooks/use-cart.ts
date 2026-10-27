@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { getCart, createCart, addToCart, updateLineItem, removeLineItem } from "@/lib/medusa/cart";
+import { getDefaultRegionId } from "@/lib/medusa/regions";
 import type { CartItem, CartState, CartActions } from "@ecommerce/types";
 
 interface CartStore extends CartState, CartActions {}
@@ -26,7 +27,7 @@ export const useCart = create<CartStore>((set, get) => ({
         set({
           cartId: cart.id,
           items: mapCartItems(cart.items),
-          subtotal: cart.subtotal,
+          subtotal: cart.item_subtotal,
           total: cart.total,
           itemCount: cart.items.reduce((sum, item) => sum + item.quantity, 0),
         });
@@ -38,7 +39,8 @@ export const useCart = create<CartStore>((set, get) => ({
     // Create a new cart if none exists
     if (!get().cartId) {
       try {
-        const newCart = await createCart();
+        const regionId = await getDefaultRegionId().catch(() => undefined);
+        const newCart = await createCart(regionId);
         set({ cartId: newCart.id });
         // Set cookie for persistence
         document.cookie = `cart_id=${newCart.id}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
@@ -65,7 +67,7 @@ export const useCart = create<CartStore>((set, get) => ({
 
       set({
         items: mapCartItems(updatedCart.items),
-        subtotal: updatedCart.subtotal,
+        subtotal: updatedCart.item_subtotal,
         total: updatedCart.total,
         itemCount: updatedCart.items.reduce(
           (sum, item) => sum + item.quantity,
@@ -78,6 +80,7 @@ export const useCart = create<CartStore>((set, get) => ({
         error: error instanceof Error ? error.message : "Failed to add item",
         loading: false,
       });
+      throw error;
     }
   },
 
@@ -89,7 +92,7 @@ export const useCart = create<CartStore>((set, get) => ({
       const updatedCart = await updateLineItem(cartId, lineId, quantity);
       set({
         items: mapCartItems(updatedCart.items),
-        subtotal: updatedCart.subtotal,
+        subtotal: updatedCart.item_subtotal,
         total: updatedCart.total,
         itemCount: updatedCart.items.reduce(
           (sum, item) => sum + item.quantity,
@@ -109,7 +112,7 @@ export const useCart = create<CartStore>((set, get) => ({
       const updatedCart = await removeLineItem(cartId, lineId);
       set({
         items: mapCartItems(updatedCart.items),
-        subtotal: updatedCart.subtotal,
+        subtotal: updatedCart.item_subtotal,
         total: updatedCart.total,
         itemCount: updatedCart.items.reduce(
           (sum, item) => sum + item.quantity,
@@ -141,7 +144,7 @@ export const useCart = create<CartStore>((set, get) => ({
       const cart = await getCart(cartId);
       set({
         items: mapCartItems(cart.items),
-        subtotal: cart.subtotal,
+        subtotal: cart.item_subtotal,
         total: cart.total,
         itemCount: cart.items.reduce((sum, item) => sum + item.quantity, 0),
       });
@@ -158,6 +161,7 @@ export const useCart = create<CartStore>((set, get) => ({
 function mapCartItems(items: {
   id: string;
   product_id: string;
+  product_handle?: string | null;
   variant_id?: string;
   product_title: string;
   variant_title: string | null;
@@ -169,6 +173,7 @@ function mapCartItems(items: {
   return items.map((item) => ({
     id: item.id,
     productId: item.product_id,
+    productHandle: item.product_handle ?? null,
     variantId: item.variant_id || "",
     title: item.product_title,
     variantTitle: item.variant_title,

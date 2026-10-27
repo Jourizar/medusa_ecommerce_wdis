@@ -143,6 +143,8 @@ export interface MedusaCart {
   currency_code: string;
   total: number;
   subtotal: number;
+  /** Items only — `subtotal` also includes shipping in Medusa v2. */
+  item_subtotal: number;
   tax_total: number;
   discount_total: number;
   discount_tax_total: number;
@@ -209,14 +211,14 @@ export interface MedusaOrder {
   currency_code: string;
   total: number;
   subtotal: number;
+  /** Items only — `subtotal` also includes shipping in Medusa v2. */
+  item_subtotal: number;
   tax_total: number;
   discount_total: number;
   gift_card_total: number;
   shipping_total: number;
   refunded_total: number;
   paid_total: number;
-  fulfillment_status_label: string;
-  payment_status_label: string;
   created_at: string;
   updated_at: string;
   metadata?: Record<string, unknown>;

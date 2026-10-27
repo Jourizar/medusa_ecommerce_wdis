@@ -2,48 +2,123 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-  scrollbar-width: thin;
-}
-
-*::-webkit-scrollbar {
-  width: 6px;
-}
-
-*::-webkit-scrollbar-track {
-  background: #1A1A2E;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: #6D28D9;
-  border-radius: 3px;
+:root {
+  --brutal-black: #000000;
+  --brutal-white: #FFFFFF;
+  --brutal-purple: #77269A;
+  --brutal-cyan: #51D6FF;
+  --brutal-pink: #EC69D4;
+  --brutal-muted: #5F5980;
 }
 
 html {
   scroll-behavior: smooth;
+  background: var(--brutal-white);
+  color: var(--brutal-black);
 }
 
-.text-gradient {
-  background: linear-gradient(135deg, #6D28D9, #F59E0B);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+body {
+  background: var(--brutal-white);
+  color: var(--brutal-black);
+  font-weight: 500;
 }
 
-.glass {
-  background: rgba(26, 26, 46, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--brutal-purple) var(--brutal-white);
 }
 
-.glass-elevated {
-  background: rgba(37, 37, 64, 0.8);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
 }
 
+*::-webkit-scrollbar-track {
+  background: var(--brutal-white);
+  border-left: 3px solid var(--brutal-black);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--brutal-purple);
+  border: 3px solid var(--brutal-black);
+}
+
+::selection {
+  background: var(--brutal-cyan);
+  color: var(--brutal-black);
+}
+
+/* Brutalist text utility */
+.text-brutal {
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.text-brutal-stroke {
+  -webkit-text-stroke: 2px var(--brutal-black);
+  color: transparent;
+}
+
+/* Brutal block — sharp edges, thick border, hard shadow */
+.brutal-block {
+  background: var(--brutal-white);
+  border: 4px solid var(--brutal-black);
+  box-shadow: 6px 6px 0 0 var(--brutal-black);
+}
+
+.brutal-block-hover {
+  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+}
+
+.brutal-block-hover:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 9px 9px 0 0 var(--brutal-black);
+}
+
+.brutal-block-hover:active {
+  transform: translate(3px, 3px);
+  box-shadow: 2px 2px 0 0 var(--brutal-black);
+}
+
+/* Striped warning band */
+.brutal-stripes {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--brutal-black) 0,
+    var(--brutal-black) 12px,
+    var(--brutal-cyan) 12px,
+    var(--brutal-cyan) 24px
+  );
+}
+
+.brutal-stripes-pink {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--brutal-black) 0,
+    var(--brutal-black) 12px,
+    var(--brutal-pink) 12px,
+    var(--brutal-pink) 24px
+  );
+}
+
+/* Scrolling barber-pole — moves the diagonal stripes right→left in a loop */
+@keyframes stripesScrollLeft {
+  from { background-position: 0 0; }
+  to { background-position: -34px 0; }
+}
+.brutal-stripes-scroll {
+  background-size: 34px 34px;
+  animation: stripesScrollLeft 1.4s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .brutal-stripes-scroll { animation: none; }
+}
+
+/* Skeleton shimmer (kept for loaders) */
 .shimmer {
-  background: linear-gradient(90deg, #1A1A2E 25%, #252540 50%, #1A1A2E 75%);
+  background: linear-gradient(90deg, #F2F2F2 25%, #FFFFFF 50%, #F2F2F2 75%);
   background-size: 200% 100%;
   animation: shimmer 2s linear infinite;
 }
@@ -51,4 +126,309 @@ html {
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
+}
+
+/* ─── DYSTOPIAN / DITHER UTILITIES ─── */
+
+/* Bayer-style dither overlay (SVG fractal noise → posterized) */
+.dither-overlay {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.8' numOctaves='2' seed='7'/><feComponentTransfer><feFuncA type='discrete' tableValues='0 0 0 0 0 0.6 0 0'/></feComponentTransfer><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 220px 220px;
+  mix-blend-mode: screen;
+  opacity: 0.45;
+}
+
+.dither-overlay-dark {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='2.4' numOctaves='2' seed='3'/><feComponentTransfer><feFuncA type='discrete' tableValues='0 0 0 0 0 0 0.7 0'/></feComponentTransfer></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 180px 180px;
+  mix-blend-mode: multiply;
+  opacity: 0.7;
+}
+
+/* CRT scanlines */
+.scanlines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.55) 0,
+    rgba(0, 0, 0, 0.55) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+}
+
+/* Halftone dot grid */
+.halftone {
+  background-image: radial-gradient(
+    rgba(81, 214, 255, 0.85) 1px,
+    transparent 1.6px
+  );
+  background-size: 8px 8px;
+}
+
+/* ─── DOT PATTERNS (currentColor for easy tinting via text-*) ─── */
+.dots-sm {
+  background-image: radial-gradient(currentColor 1px, transparent 1.4px);
+  background-size: 10px 10px;
+}
+.dots {
+  background-image: radial-gradient(currentColor 1.5px, transparent 1.9px);
+  background-size: 14px 14px;
+}
+.dots-lg {
+  background-image: radial-gradient(currentColor 2.5px, transparent 3px);
+  background-size: 22px 22px;
+}
+.dots-xl {
+  background-image: radial-gradient(currentColor 4px, transparent 5px);
+  background-size: 34px 34px;
+}
+
+/* Diagonal Ben-Day style — offset rows for that printed-comic feel */
+.dots-bayer {
+  background-image:
+    radial-gradient(currentColor 1.5px, transparent 1.9px),
+    radial-gradient(currentColor 1.5px, transparent 1.9px);
+  background-size: 18px 18px;
+  background-position: 0 0, 9px 9px;
+}
+
+/* Fading dot panel — gradient mask so dots dissolve toward an edge */
+.dots-fade-r {
+  -webkit-mask-image: linear-gradient(to right, #000 60%, transparent 100%);
+          mask-image: linear-gradient(to right, #000 60%, transparent 100%);
+}
+.dots-fade-l {
+  -webkit-mask-image: linear-gradient(to left, #000 60%, transparent 100%);
+          mask-image: linear-gradient(to left, #000 60%, transparent 100%);
+}
+.dots-fade-t {
+  -webkit-mask-image: linear-gradient(to top, #000 60%, transparent 100%);
+          mask-image: linear-gradient(to top, #000 60%, transparent 100%);
+}
+.dots-fade-b {
+  -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+          mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+}
+
+/* Neon glow text */
+.neon-cyan {
+  color: #51d6ff;
+  text-shadow:
+    0 0 4px #51d6ff,
+    0 0 12px rgba(81, 214, 255, 0.9),
+    0 0 28px rgba(81, 214, 255, 0.55);
+}
+
+.neon-pink {
+  color: #ec69d4;
+  text-shadow:
+    0 0 4px #ec69d4,
+    0 0 12px rgba(236, 105, 212, 0.9),
+    0 0 28px rgba(236, 105, 212, 0.55);
+}
+
+/* Subtle CRT flicker */
+@keyframes crtFlicker {
+  0%, 100% { opacity: 1; }
+  3% { opacity: 0.92; }
+  6% { opacity: 1; }
+  72% { opacity: 0.97; }
+}
+.crt-flicker { animation: crtFlicker 8s infinite; }
+
+/* ─── GLITCH FIELD ─── */
+
+/* Base noise layer that the glitch effect is built on */
+.glitch-base {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='2' seed='11'/><feComponentTransfer><feFuncA type='discrete' tableValues='0 0 0 0 0 0.6 0 0'/></feComponentTransfer></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 220px 220px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Chromatic-aberration siblings — same noise, offset + tinted */
+@keyframes glitchRgbCyan {
+  0%, 100% { transform: translate(-2px, 0); }
+  20% { transform: translate(-5px, 1px); }
+  40% { transform: translate(-1px, -1px); }
+  60% { transform: translate(-4px, 2px); }
+  80% { transform: translate(-2px, -2px); }
+}
+@keyframes glitchRgbPink {
+  0%, 100% { transform: translate(2px, 0); }
+  20% { transform: translate(5px, -1px); }
+  40% { transform: translate(1px, 1px); }
+  60% { transform: translate(4px, -2px); }
+  80% { transform: translate(2px, 2px); }
+}
+.glitch-rgb-cyan {
+  filter: hue-rotate(160deg) saturate(2.5);
+  mix-blend-mode: screen;
+  animation: glitchRgbCyan 2.6s steps(8) infinite;
+}
+.glitch-rgb-pink {
+  filter: hue-rotate(310deg) saturate(2.5);
+  mix-blend-mode: screen;
+  animation: glitchRgbPink 2.6s steps(8) infinite;
+}
+
+/* Sliced bands that flash horizontal sections of the noise */
+@keyframes glitchSlice {
+  0%, 5%, 96%, 100% { clip-path: inset(100% 0 0 0); opacity: 0; }
+  6%  { clip-path: inset(15% 0 60% 0); opacity: 0.75; transform: translateX(-6px); }
+  10% { clip-path: inset(70% 0 10% 0); opacity: 0.65; transform: translateX(4px); }
+  14% { clip-path: inset(35% 0 35% 0); opacity: 0.85; transform: translateX(-3px); }
+  18% { clip-path: inset(85% 0 5% 0); opacity: 0.7;  transform: translateX(8px); }
+  22% { clip-path: inset(45% 0 25% 0); opacity: 0.55; transform: translateX(-2px); }
+  60% { clip-path: inset(20% 0 70% 0); opacity: 0.6;  transform: translateX(5px); }
+  64% { clip-path: inset(60% 0 30% 0); opacity: 0.7;  transform: translateX(-7px); }
+}
+.glitch-slice {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: glitchSlice 5s steps(1) infinite;
+}
+.glitch-slice-pink { background: #ec69d4; mix-blend-mode: screen; }
+.glitch-slice-cyan { background: #51d6ff; mix-blend-mode: screen; animation-delay: -2.5s; }
+
+/* Horizontal tear that sweeps top→bottom on a long loop */
+@keyframes glitchTear {
+  0% { transform: translateY(-12%); opacity: 0; }
+  5% { opacity: 0.9; }
+  60% { opacity: 0.9; }
+  100% { transform: translateY(112%); opacity: 0; }
+}
+.glitch-tear {
+  position: absolute;
+  left: 0; right: 0;
+  height: 6px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #51d6ff 18%,
+    #ec69d4 50%,
+    #51d6ff 82%,
+    transparent 100%
+  );
+  mix-blend-mode: screen;
+  filter: blur(1px);
+  pointer-events: none;
+  animation: glitchTear 7s linear infinite;
+}
+.glitch-tear-2 {
+  animation-duration: 11s;
+  animation-delay: -3s;
+  height: 3px;
+  opacity: 0.6;
+}
+
+/* ─── SEASONAL GARLAND SWAY ─── */
+.season-sway {
+  animation: seasonSway 3.4s ease-in-out infinite alternate;
+}
+@keyframes seasonSway {
+  from { transform: rotate(-7deg); }
+  to { transform: rotate(7deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .season-sway { animation: none; }
+}
+
+/* ─── CRUMPLED PAPER BACKGROUND ───
+   Low-frequency noise lit from the top-left reads as creases. Multiplied
+   over cream so flats stay cream and only the folds shade. Tiles seamlessly
+   (stitchTiles). Tune strength with --paper-opacity. */
+.paper-texture {
+  position: relative;
+  isolation: isolate;
+  background-color: #fff1e8;
+}
+.paper-texture::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='700' height='700'><filter id='p' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='turbulence' baseFrequency='0.006 0.009' numOctaves='4' seed='11' stitchTiles='stitch' result='n'/><feDiffuseLighting in='n' lighting-color='white' surfaceScale='5' diffuseConstant='1.1'><feDistantLight azimuth='225' elevation='60'/></feDiffuseLighting></filter><rect width='100%25' height='100%25' filter='url(%23p)'/></svg>");
+  background-size: 700px 700px;
+  mix-blend-mode: multiply;
+  opacity: var(--paper-opacity, 0.55);
+}
+
+/* ─── BRUTALIST DUAL-HANDLE RANGE SLIDER ─── */
+.price-range-input {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 40px;
+  background: transparent;
+  pointer-events: none;
+}
+.price-range-input::-webkit-slider-runnable-track {
+  background: transparent;
+  height: 40px;
+}
+.price-range-input::-moz-range-track {
+  background: transparent;
+  height: 40px;
+}
+.price-range-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  width: 22px;
+  height: 22px;
+  background: var(--brutal-pink);
+  border: 3px solid var(--brutal-black);
+  border-radius: 50%;
+  cursor: grab;
+  pointer-events: auto;
+  box-shadow: 2px 2px 0 0 var(--brutal-black);
+  /* WebKit pins the thumb to the track top; center it: (40px - 22px) / 2 */
+  margin-top: 9px;
+}
+.price-range-input::-moz-range-thumb {
+  box-sizing: border-box;
+  width: 22px;
+  height: 22px;
+  background: var(--brutal-pink);
+  border: 3px solid var(--brutal-black);
+  border-radius: 50%;
+  cursor: grab;
+  pointer-events: auto;
+  box-shadow: 2px 2px 0 0 var(--brutal-black);
+}
+.price-range-input:active::-webkit-slider-thumb { cursor: grabbing; background: var(--brutal-cyan); }
+.price-range-input:active::-moz-range-thumb { cursor: grabbing; background: var(--brutal-cyan); }
+
+/* Marquee track */
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* Glitch orbit — offset copies trace a true 15px-radius circle around the base.
+   Using CSS Motion Path (offset-*) so the path is a real circle, not a polygon. */
+@keyframes glitchOrbit {
+  from { offset-distance: 0%; }
+  to   { offset-distance: 100%; }
+}
+.glitch-orbit {
+  offset-path: circle(15px);
+  offset-rotate: 0deg;
+  animation: glitchOrbit 25s linear infinite;
+  will-change: offset-distance;
+}
+@media (prefers-reduced-motion: reduce) {
+  .glitch-orbit { animation: none; offset-path: none; transform: translate(10px, 10px); }
 }

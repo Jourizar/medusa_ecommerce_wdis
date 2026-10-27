@@ -2,7 +2,8 @@
  * Format a price for display.
  * Handles currency symbol placement and decimal formatting.
  *
- * @param amount - Amount in cents (e.g., 1999 = $19.99)
+ * @param amount - Amount in decimal currency units, matching Medusa v2's
+ *   convention (e.g., 19.99 = $19.99)
  * @param currencyCode - ISO 4217 currency code (e.g., "usd")
  * @returns Formatted price string
  */
@@ -20,9 +21,7 @@ export function formatPrice(
   };
 
   const symbol = currencySymbols[currencyCode.toLowerCase()] || "$";
-  const formatted = (amount / 100).toFixed(2);
-
-  return `${symbol}${formatted}`;
+  return `${symbol}${amount.toFixed(2)}`;
 }
 
 /**

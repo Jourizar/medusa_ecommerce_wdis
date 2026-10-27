@@ -2,7 +2,7 @@
  * Application-wide constants.
  */
 
-export const SITE_NAME = "URBN";
+export const SITE_NAME = "WDIS";
 export const SITE_TAGLINE = "Premium Streetwear & Urban Fashion";
 
 export const CURRENCY = "usd";
@@ -21,8 +21,10 @@ export const SORT_OPTIONS = [
 export const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Shop", href: "/products" },
-  { label: "Cart", href: "/cart" },
+  { label: "Art", href: "/art" },
 ] as const;
+
+export const ART_CATEGORY_HANDLE = "art";
 
 export const ANIMATION_DURATION = {
   fast: 0.15,

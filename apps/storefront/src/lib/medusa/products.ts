@@ -1,4 +1,5 @@
 import { medusaFetch } from "./client";
+import { getDefaultRegionId } from "./regions";
 import type {
   MedusaProduct,
   MedusaProductListResponse,
@@ -19,12 +20,18 @@ import type {
  * @param params.region_id - Region for pricing
  * @returns Array of MedusaProduct
  */
+const PRODUCT_FIELDS =
+  "*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.options,*images,*options,*options.values,+thumbnail,+handle,+tags.id,+tags.value";
+
 export async function getProducts(
   params: Record<string, string> = {}
 ): Promise<MedusaProduct[]> {
+  const region_id = await getDefaultRegionId();
   const query = new URLSearchParams({
     limit: "50",
     offset: "0",
+    region_id,
+    fields: PRODUCT_FIELDS,
     ...params,
   });
 
@@ -50,27 +57,29 @@ export async function getProductsCount(
 
 /**
  * Fetch a single product by handle.
+ *
+ * Returns null when the backend responds but no product matches, so callers
+ * can 404. Network/backend failures still throw — a dead backend should
+ * surface as an error page, not a false "product not found".
  */
 export async function getProductByHandle(
   handle: string
-): Promise<MedusaProduct> {
+): Promise<MedusaProduct | null> {
+  const region_id = await getDefaultRegionId();
   const data = await medusaFetch<MedusaProductListResponse>(
-    `/products?handle=${encodeURIComponent(handle)}&expand=images,variants,variants.prices,options,options.values`
+    `/products?handle=${encodeURIComponent(handle)}&region_id=${region_id}&fields=${encodeURIComponent(PRODUCT_FIELDS)}`
   );
 
-  if (data.products.length === 0) {
-    throw new Error(`Product not found: ${handle}`);
-  }
-
-  return data.products[0];
+  return data.products[0] ?? null;
 }
 
 /**
  * Fetch a single product by ID.
  */
 export async function getProductById(id: string): Promise<MedusaProduct> {
+  const region_id = await getDefaultRegionId();
   const data = await medusaFetch<MedusaProductDetailResponse>(
-    `/products/${id}?expand=images,variants,variants.prices,options,options.values`
+    `/products/${id}?region_id=${region_id}&fields=${encodeURIComponent(PRODUCT_FIELDS)}`
   );
 
   return data.product;

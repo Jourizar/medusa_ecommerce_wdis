@@ -17,7 +17,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="block text-sm font-medium text-text mb-1.5"
+            className="block text-xs font-black uppercase tracking-widest text-black mb-2"
           >
             {label}
           </label>
@@ -25,7 +25,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
         <div className="relative">
           {icon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-black pointer-events-none">
               {icon}
             </div>
           )}
@@ -34,13 +34,13 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             type={type}
             className={cn(
-              "w-full rounded-xl bg-surface border border-border text-text",
-              "placeholder:text-text-muted/60",
-              "focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
+              "w-full bg-cream border-[3px] border-black text-black h-12 px-4 font-medium",
+              "placeholder:text-muted",
+              "focus:outline-none focus:shadow-[4px_4px_0_0_#000] focus:-translate-x-[2px] focus:-translate-y-[2px]",
+              "transition-[transform,box-shadow] duration-100",
               "disabled:opacity-50 disabled:pointer-events-none",
-              "transition-all duration-200",
               icon && "pl-10",
-              error && "border-danger focus:ring-danger",
+              error && "border-hotpink",
               className
             )}
             ref={ref}
@@ -53,7 +53,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {error && (
           <p
             id={`${inputId}-error`}
-            className="mt-1.5 text-sm text-danger"
+            className="mt-2 text-xs font-bold uppercase tracking-wider text-hotpink"
             role="alert"
           >
             {error}

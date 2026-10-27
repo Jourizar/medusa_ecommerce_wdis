@@ -2,26 +2,29 @@
  * Medusa Store API client.
  * Thin wrapper around fetch with typed responses and error handling.
  * Uses ISR caching via Next.js fetch options.
- * 
- * Updated: 2026-04-09 — Fixed publishable key loading for SSR
  */
 
 import type { MedusaError } from "@ecommerce/types";
 
-interface FetchOptions extends RequestInit {
+interface FetchOptions extends Omit<RequestInit, "headers"> {
   /** Cache revalidation time in seconds (ISR). Default: 60 */
   revalidate?: number;
   /** Include auth token in headers */
   token?: string;
   /** Cart session ID */
   cartId?: string;
+  headers?: Record<string, string>;
 }
 
 /**
  * Get Medusa backend URL from environment.
+ * On the server, MEDUSA_INTERNAL_URL (e.g. http://medusa:9000 inside Docker)
+ * skips the round trip through the public internet and reverse proxy.
  */
-function getMedusaUrl(): string {
-  const url = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL;
+export function getMedusaUrl(): string {
+  const internal =
+    typeof window === "undefined" ? process.env.MEDUSA_INTERNAL_URL : undefined;
+  const url = internal || process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL;
   if (!url) {
     throw new Error(
       "NEXT_PUBLIC_MEDUSA_BACKEND_URL is not set. Copy .env.example to .env.local and configure it."
@@ -33,11 +36,16 @@ function getMedusaUrl(): string {
 /**
  * Get publishable API key from environment.
  */
-function getPublishableKey(): string {
+export function getPublishableKey(): string {
   // Non-prefixed version for server-side, NEXT_PUBLIC_ for client-side
-  const key = process.env.MEDUSA_PUBLISHABLE_KEY 
-    || process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY 
-    || "pk_465b71216d41bc1a92f67733038d75fc20cbeaae9b62d86d47511e471280d205";
+  const key =
+    process.env.MEDUSA_PUBLISHABLE_KEY ||
+    process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY;
+  if (!key) {
+    throw new Error(
+      "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY is not set. Copy .env.example to .env.local and configure it."
+    );
+  }
   return key;
 }
 

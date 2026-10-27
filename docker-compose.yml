@@ -28,8 +28,8 @@ services:
 
   medusa:
     build:
-      context: ./apps/medusa-backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/medusa-backend/Dockerfile
     container_name: medusa-backend
     environment:
       DATABASE_URL: postgresql://medusa:medusa_password@postgres:5432/medusa
@@ -42,8 +42,6 @@ services:
       AUTH_CORS: http://localhost:3000
       STRIPE_API_KEY: sk_test_your_stripe_key
       STRIPE_WEBHOOK_SECRET: whsec_your_webhook_secret
-      CONVEX_URL: https://your-project.convex.cloud
-      CONVEX_ADMIN_KEY: your_convex_admin_key
     ports:
       - "9000:9000"
     depends_on:
@@ -52,7 +50,7 @@ services:
       redis:
         condition: service_started
     volumes:
-      - ./apps/medusa-backend/uploads:/app/uploads
+      - ./apps/medusa-backend/static:/app/server/static
 
 volumes:
   postgres_data:

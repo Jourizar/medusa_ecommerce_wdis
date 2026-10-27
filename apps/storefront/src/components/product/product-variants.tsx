@@ -25,9 +25,15 @@ export function ProductVariants({
     const newOptions = { ...selectedOptions, [optionId]: value };
     setSelectedOptions(newOptions);
 
-    // Find the matching variant
-    const matchingVariant = product.variants.find((variant) =>
-      variant.options.every(
+    // Only resolve a variant once every option has a selection — matching on
+    // a partial selection could silently pick the wrong variant.
+    const allSelected = (product.options ?? []).every(
+      (opt) => newOptions[opt.id]
+    );
+    if (!allSelected) return;
+
+    const matchingVariant = (product.variants ?? []).find((variant) =>
+      (variant.options ?? []).every(
         (opt) => newOptions[opt.option_id] === opt.value
       )
     );
@@ -41,7 +47,7 @@ export function ProductVariants({
     <div className="mb-6 space-y-4">
       {product.options.map((option: MedusaProductOption) => (
         <div key={option.id}>
-          <label className="block text-sm font-medium text-text mb-2">
+          <label className="block text-xs font-black uppercase tracking-widest text-black mb-2">
             {option.title}
           </label>
           <div className="flex flex-wrap gap-2">
@@ -52,11 +58,12 @@ export function ProductVariants({
                 <button
                   key={value.id}
                   onClick={() => handleOptionSelect(option.id, value.value)}
+                  aria-pressed={isSelected}
                   className={cn(
-                    "px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border",
+                    "min-w-[3rem] px-4 py-2 text-sm font-black uppercase tracking-widest border-[3px] border-black transition-[transform,box-shadow,background-color] duration-100",
                     isSelected
-                      ? "bg-primary border-primary text-white shadow-lg shadow-primary/25"
-                      : "bg-surface border-border text-text-muted hover:border-primary hover:text-text"
+                      ? "bg-primary text-white shadow-[3px_3px_0_0_#000] -translate-x-0.5 -translate-y-0.5"
+                      : "bg-cream text-black hover:bg-accent active:translate-x-0.5 active:translate-y-0.5"
                   )}
                 >
                   {value.value}

@@ -12,7 +12,7 @@ export function SortDropdown() {
   const handleSortChange = (value: string) => {
     const params = new URLSearchParams(searchParams);
     params.set("sort", value);
-    params.set("page", "1"); // Reset to first page on sort change
+    params.set("page", "1");
     router.push(`${pathname}?${params.toString()}`);
   };
 
@@ -20,7 +20,7 @@ export function SortDropdown() {
     <select
       value={currentSort}
       onChange={(e) => handleSortChange(e.target.value)}
-      className="bg-surface border border-border text-text text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary"
+      className="bg-cream border-[3px] border-black text-black text-[10px] font-black uppercase tracking-widest px-2 h-9 shadow-[3px_3px_0_0_#000] focus:outline-none focus:shadow-[5px_5px_0_0_#000] focus:-translate-x-0.5 focus:-translate-y-0.5 transition-[transform,box-shadow] duration-100 max-w-[150px]"
       aria-label="Sort products"
     >
       {SORT_OPTIONS.map((option) => (

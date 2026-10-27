@@ -14,22 +14,22 @@ function Badge({
   ...props
 }: BadgeProps) {
   const variants: Record<NonNullable<BadgeProps["variant"]>, string> = {
-    default: "bg-primary-muted text-primary",
-    success: "bg-success/10 text-success",
-    danger: "bg-danger/10 text-danger",
-    warning: "bg-accent/10 text-accent",
-    accent: "bg-accent/10 text-accent",
+    default: "bg-primary text-white",
+    success: "bg-accent text-black",
+    danger: "bg-hotpink text-black",
+    warning: "bg-accent text-black",
+    accent: "bg-accent text-black",
   };
 
   const sizes: Record<NonNullable<BadgeProps["size"]>, string> = {
-    sm: "text-xs px-2 py-0.5",
-    md: "text-sm px-3 py-1",
+    sm: "text-[10px] px-2 py-1",
+    md: "text-xs px-3 py-1.5",
   };
 
   return (
     <span
       className={cn(
-        "inline-flex items-center font-medium rounded-full",
+        "inline-flex items-center font-black uppercase tracking-widest border-[2px] border-black",
         variants[variant],
         sizes[size],
         className

@@ -1,5 +1,5 @@
 import { medusaFetch } from "./client";
-import type { MedusaOrder, MedusaRegion } from "@ecommerce/types";
+import type { MedusaOrder } from "@ecommerce/types";
 
 interface OrderResponse {
   order: MedusaOrder;
@@ -12,28 +12,35 @@ interface OrdersResponse {
   limit: number;
 }
 
+const ORDER_FIELDS = "*items,*shipping_address,*shipping_methods,+item_subtotal";
+
 /**
- * Fetch an order by ID.
+ * Fetch an order by ID. Pass the customer token when viewing from the
+ * account area so Medusa scopes the lookup to that customer.
  */
-export async function getOrder(id: string): Promise<MedusaOrder> {
-  const data = await medusaFetch<OrderResponse>(`/orders/${id}`);
+export async function getOrder(id: string, token?: string): Promise<MedusaOrder> {
+  const data = await medusaFetch<OrderResponse>(
+    `/orders/${id}?fields=${encodeURIComponent(ORDER_FIELDS)}`,
+    { token, revalidate: 0 }
+  );
   return data.order;
 }
 
 /**
- * Fetch orders by email (customer order lookup).
+ * Fetch the authenticated customer's orders, newest first.
+ * Medusa's store API scopes orders to the logged-in customer.
  */
-export async function getOrdersByEmail(
-  email: string
-): Promise<MedusaOrder[]> {
-  const data = await medusaFetch<OrdersResponse>(`/orders?email=${encodeURIComponent(email)}`);
+export async function getOrders(token: string): Promise<MedusaOrder[]> {
+  const data = await medusaFetch<OrdersResponse>(
+    `/orders?order=-created_at&limit=50&fields=${encodeURIComponent("*items")}`,
+    { token, revalidate: 0 }
+  );
   return data.orders;
 }
 
-/**
- * Fetch available regions.
- */
-export async function getRegions(): Promise<MedusaRegion[]> {
-  const data = await medusaFetch<{ regions: MedusaRegion[] }>("/regions");
-  return data.regions;
+/** "partially_shipped" → "Partially shipped" */
+export function formatStatus(status: string | null | undefined): string {
+  if (!status) return "";
+  const text = status.replace(/_/g, " ");
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }

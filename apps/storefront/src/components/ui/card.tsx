@@ -8,17 +8,15 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 function Card({
   className,
   hoverable = false,
-  glass = true,
+  glass: _glass = true,
   children,
   ...props
 }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-2xl overflow-hidden",
-        glass && "glass",
-        hoverable &&
-          "transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1",
+        "bg-cream border-[4px] border-black shadow-[6px_6px_0_0_#000] overflow-hidden",
+        hoverable && "brutal-block-hover cursor-pointer",
         className
       )}
       {...props}
@@ -33,7 +31,10 @@ function CardHeader({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("px-6 pt-6 pb-4", className)} {...props} />
+    <div
+      className={cn("px-5 pt-5 pb-4 border-b-[3px] border-black", className)}
+      {...props}
+    />
   );
 }
 
@@ -41,9 +42,7 @@ function CardContent({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div className={cn("px-6 pb-6", className)} {...props} />
-  );
+  return <div className={cn("px-5 py-5", className)} {...props} />;
 }
 
 function CardFooter({
@@ -52,7 +51,7 @@ function CardFooter({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("px-6 pt-4 pb-6 border-t border-border", className)}
+      className={cn("px-5 pt-4 pb-5 border-t-[3px] border-black", className)}
       {...props}
     />
   );

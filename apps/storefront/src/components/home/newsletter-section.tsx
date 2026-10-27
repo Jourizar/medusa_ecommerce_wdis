@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
@@ -12,54 +11,60 @@ export function NewsletterSection() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Connect to newsletter service
     setSubmitted(true);
   };
 
   return (
-    <section className="py-20 px-4">
-      <motion.div
-        className="container mx-auto max-w-2xl text-center"
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-      >
-        <Mail className="w-12 h-12 text-primary mx-auto mb-4" />
-        <h2 className="text-3xl md:text-4xl font-display font-bold text-text mb-3">
-          Get First Access
-        </h2>
-        <p className="text-text-muted mb-8">
-          Be the first to know about new drops, exclusive deals, and member-only
-          discounts. No spam — just fire.
-        </p>
+    <section className="py-24 px-4 bg-accent border-b-[6px] border-black">
+      <div className="max-w-container mx-auto">
+        <div className="max-w-3xl mx-auto bg-cream border-[6px] border-black shadow-[12px_12px_0_0_#77269A] p-8 md:p-12 text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-hotpink border-[4px] border-black mb-6 rotate-3">
+            <Mail className="w-10 h-10 text-black" strokeWidth={3} />
+          </div>
 
-        {submitted ? (
-          <motion.div
-            className="glass rounded-2xl p-6 text-center"
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-          >
-            <p className="text-lg font-medium text-success">
-              You are in! Check your inbox for a welcome surprise.
-            </p>
-          </motion.div>
-        ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <Input
-              type="email"
-              placeholder="you@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="flex-1"
-            />
-            <Button type="submit" size="lg">
-              Subscribe
-            </Button>
-          </form>
-        )}
-      </motion.div>
+          <h2 className="text-brutal text-5xl md:text-7xl text-black mb-4">
+            GET
+            <br />
+            FIRST{" "}
+            <span className="bg-primary text-white px-3 inline-block border-[5px] border-black -rotate-1">
+              ACCESS
+            </span>
+          </h2>
+
+          <p className="text-base md:text-lg font-bold uppercase tracking-wider text-black mb-10 max-w-xl mx-auto">
+            New drops · Exclusive deals · Member-only discounts.
+            <br />
+            <span className="bg-hotpink px-2 border-[3px] border-black inline-block mt-2">
+              No spam — just fire.
+            </span>
+          </p>
+
+          {submitted ? (
+            <div className="bg-primary text-white border-[4px] border-black p-6 shadow-[6px_6px_0_0_#000]">
+              <p className="text-xl font-black uppercase tracking-wider">
+                ★ You are in! Check your inbox. ★
+              </p>
+            </div>
+          ) : (
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto"
+            >
+              <Input
+                type="email"
+                placeholder="YOU@EMAIL.COM"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="flex-1"
+              />
+              <Button type="submit" size="lg" variant="primary">
+                Subscribe
+              </Button>
+            </form>
+          )}
+        </div>
+      </div>
     </section>
   );
 }

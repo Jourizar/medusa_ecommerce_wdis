@@ -1,0 +1,31 @@
+# Caddy gets and renews HTTPS certificates automatically (Let's Encrypt).
+# DOMAIN and ACME_EMAIL come from .env.production via docker-compose.
+
+{
+	email {$ACME_EMAIL}
+}
+
+# Storefront
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy storefront:3000
+
+	# Long-lived caching for Next's hashed build assets.
+	@immutable path /_next/static/*
+	header @immutable Cache-Control "public, max-age=31536000, immutable"
+}
+
+# One canonical host for SEO: www -> apex.
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}
+
+# Medusa API, admin dashboard (/app) and uploaded images (/static)
+api.{$DOMAIN} {
+	encode zstd gzip
+	request_body max_size 12MB
+	reverse_proxy medusa:9000
+
+	@uploads path /static/*
+	header @uploads Cache-Control "public, max-age=2592000"
+}

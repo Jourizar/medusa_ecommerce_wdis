@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "ghost" | "danger" | "outline";
+  variant?: "primary" | "ghost" | "danger" | "outline" | "accent";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
   asChild?: boolean;
@@ -18,7 +18,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       variant = "primary",
       size = "md",
       loading = false,
-      asChild = false,
+      asChild: _asChild = false,
       disabled,
       children,
       ...props
@@ -26,26 +26,26 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-50 active:scale-[0.97]";
+      "inline-flex items-center justify-center font-black uppercase tracking-wider border-[3px] border-black transition-[transform,box-shadow] duration-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent disabled:pointer-events-none disabled:opacity-60 hover:-translate-x-[2px] hover:-translate-y-[2px] active:translate-x-[2px] active:translate-y-[2px]";
 
     const variants: Record<NonNullable<ButtonProps["variant"]>, string> = {
       primary:
-        "bg-primary hover:bg-primary-hover text-white shadow-lg shadow-primary/25 hover:shadow-primary/40",
+        "bg-primary text-white shadow-[4px_4px_0_0_#000] hover:shadow-[6px_6px_0_0_#000] active:shadow-[2px_2px_0_0_#000]",
+      accent:
+        "bg-accent text-black shadow-[4px_4px_0_0_#000] hover:shadow-[6px_6px_0_0_#000] active:shadow-[2px_2px_0_0_#000]",
       ghost:
-        "bg-transparent hover:bg-surface-elevated text-text-muted hover:text-text",
+        "bg-transparent border-transparent shadow-none text-black hover:bg-bg-alt hover:translate-x-0 hover:translate-y-0 active:translate-x-0 active:translate-y-0",
       danger:
-        "bg-danger hover:bg-red-600 text-white shadow-lg shadow-danger/25",
+        "bg-hotpink text-black shadow-[4px_4px_0_0_#000] hover:shadow-[6px_6px_0_0_#000] active:shadow-[2px_2px_0_0_#000]",
       outline:
-        "border border-border hover:border-primary text-text hover:text-primary bg-transparent",
+        "bg-cream text-black shadow-[4px_4px_0_0_#000] hover:shadow-[6px_6px_0_0_#000] active:shadow-[2px_2px_0_0_#000]",
     };
 
     const sizes: Record<NonNullable<ButtonProps["size"]>, string> = {
-      sm: "text-sm px-3 py-1.5 h-8",
-      md: "text-sm px-5 py-2.5 h-10",
-      lg: "text-base px-8 py-3 h-12",
+      sm: "text-xs px-4 py-2 h-9",
+      md: "text-sm px-6 py-3 h-12",
+      lg: "text-base px-8 py-4 h-14",
     };
-
-    const Comp = asChild ? "span" : "button";
 
     return (
       <button

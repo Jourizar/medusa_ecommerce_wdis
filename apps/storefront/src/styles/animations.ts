@@ -3,21 +3,37 @@ import { type Variants } from "framer-motion";
 /**
  * Shared Framer Motion animation variants.
  * Reusable animation configurations for consistent motion design.
+ * Note: `transition` must live inside the target variant — framer-motion
+ * ignores it as a sibling key of the variants object.
  */
 
 // Page transitions
 export const pageTransition: Variants = {
   initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -20 },
-  transition: { duration: 0.4, ease: "easeOut" },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+  exit: {
+    opacity: 0,
+    y: -20,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
 };
 
 export const pageSlideIn: Variants = {
   initial: { opacity: 0, x: 40 },
-  animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -40 },
-  transition: { type: "spring", stiffness: 200, damping: 25 },
+  animate: {
+    opacity: 1,
+    x: 0,
+    transition: { type: "spring", stiffness: 200, damping: 25 },
+  },
+  exit: {
+    opacity: 0,
+    x: -40,
+    transition: { type: "spring", stiffness: 200, damping: 25 },
+  },
 };
 
 // Staggered children
@@ -32,23 +48,36 @@ export const staggerContainer: Variants = {
 
 export const staggerItem: Variants = {
   initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.4, ease: "easeOut" },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
 };
 
 // Scale entrance
 export const scaleIn: Variants = {
   initial: { opacity: 0, scale: 0.95 },
-  animate: { opacity: 1, scale: 1 },
-  exit: { opacity: 0, scale: 0.95 },
-  transition: { duration: 0.25, ease: "easeOut" },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.25, ease: "easeOut" },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.95,
+    transition: { duration: 0.25, ease: "easeOut" },
+  },
 };
 
 // Slide up
 export const slideUp: Variants = {
   initial: { opacity: 0, y: 40 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
+  },
 };
 
 // Hover lift
@@ -73,9 +102,14 @@ export const buttonPress = {
 // Fade only
 export const fadeIn: Variants = {
   initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
-  transition: { duration: 0.3 },
+  animate: {
+    opacity: 1,
+    transition: { duration: 0.3 },
+  },
+  exit: {
+    opacity: 0,
+    transition: { duration: 0.3 },
+  },
 };
 
 // Parallax (for hero backgrounds)

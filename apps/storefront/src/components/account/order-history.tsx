@@ -1,99 +1,48 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useAuth } from "@/hooks/use-auth";
 import { formatPrice } from "@/lib/utils/format-price";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { formatStatus } from "@/lib/medusa/orders";
 import type { MedusaOrder } from "@ecommerce/types";
 
-export function OrderHistory() {
-  const { user, isAuthenticated } = useAuth();
-  const [orders, setOrders] = useState<MedusaOrder[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!isAuthenticated || !user?.email) {
-      setLoading(false);
-      return;
-    }
-
-    // TODO: Fetch orders from Medusa API
-    // const fetchOrders = async () => {
-    //   const data = await getOrdersByEmail(user.email);
-    //   setOrders(data);
-    //   setLoading(false);
-    // };
-    // fetchOrders();
-
-    setLoading(false);
-  }, [isAuthenticated, user]);
-
-  if (!isAuthenticated) {
-    return (
-      <div className="glass rounded-2xl p-8 text-center">
-        <p className="text-text-muted">
-          Sign in to view your order history.
-        </p>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-20 w-full" />
-      </div>
-    );
-  }
-
+export function OrderHistory({ orders }: { orders: MedusaOrder[] }) {
   if (orders.length === 0) {
     return (
-      <div className="glass rounded-2xl p-8 text-center">
-        <p className="text-text-muted">
-          You have not placed any orders yet.
+      <div className="bg-cream border-[5px] border-black shadow-[6px_6px_0_0_#000] p-8 text-center">
+        <p className="text-sm font-bold uppercase tracking-wider">
+          You haven&apos;t placed any orders yet.
         </p>
+        <Link
+          href="/products"
+          className="mt-4 inline-flex text-xs font-black uppercase tracking-widest border-[3px] border-black bg-hotpink px-4 py-2 hover:bg-accent transition-colors"
+        >
+          Start shopping
+        </Link>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-display font-bold text-text">
-        Order History
-      </h2>
-
+      <h2 className="text-brutal text-2xl">Order history</h2>
       {orders.map((order) => (
         <Link
           key={order.id}
           href={`/account/orders/${order.id}`}
-          className="block glass rounded-xl p-4 hover:border-primary/50 transition-colors"
+          className="flex items-center justify-between gap-4 bg-cream border-[3px] border-black p-4 shadow-[4px_4px_0_0_#000] hover:shadow-[6px_6px_0_0_#000] hover:-translate-x-[2px] hover:-translate-y-[2px] transition-[transform,box-shadow] duration-100"
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-text">
-                Order #{order.display_id}
-              </p>
-              <p className="text-sm text-text-muted">
-                {new Date(order.created_at).toLocaleDateString()}
-              </p>
-            </div>
-
-            <div className="text-right">
-              <p className="font-display font-bold text-text">
-                {formatPrice(order.total)}
-              </p>
-              <Badge
-                variant={
-                  order.status === "completed" ? "success" : "warning"
-                }
-                size="sm"
-              >
-                {order.status}
-              </Badge>
-            </div>
+          <div>
+            <p className="font-black uppercase tracking-widest text-sm">
+              Order #{order.display_id}
+            </p>
+            <p className="text-xs font-bold uppercase tracking-wider text-text-muted">
+              {new Date(order.created_at).toLocaleDateString()} ·{" "}
+              {order.items?.length ?? 0} item{order.items?.length === 1 ? "" : "s"}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="font-black">{formatPrice(order.total, order.currency_code)}</p>
+            <p className="text-xs font-bold uppercase tracking-wider">
+              {formatStatus(order.fulfillment_status)}
+            </p>
           </div>
         </Link>
       ))}

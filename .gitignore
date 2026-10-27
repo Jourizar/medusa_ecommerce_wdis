@@ -43,7 +43,30 @@ coverage/
 
 # Medusa
 uploads/
+apps/medusa-backend/static/
 .medusa/
 
 # Docker
 *.log
+
+# Production env + backups (never commit)
+.env.production
+.env.netlify
+*.bak-*
+backups/
+
+# AI-assistant / editor tooling (local only)
+.agents/
+.claude/
+.hermes/
+.qwen/
+skills-lock.json
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Windows folder metadata
+desktop.ini
+
+# Stray Medusa CLI template (real template is .env.example)
+.env.template

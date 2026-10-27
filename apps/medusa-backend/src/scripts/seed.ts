@@ -17,6 +17,7 @@ import {
   ContainerRegistrationKeys,
   Modules,
 } from "@medusajs/framework/utils";
+import { setupCheckout } from "./setup-checkout";
 
 export default async function seedDemoData({ container }: ExecArgs) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
@@ -26,24 +27,25 @@ export default async function seedDemoData({ container }: ExecArgs) {
   const salesChannelModuleService = container.resolve(Modules.SALES_CHANNEL);
   const apikeyModuleService = container.resolve(Modules.API_KEY);
 
-  const countriesInRegions = ["US", "CA", "DE", "DK", "SE", "GB"];
+  const countriesInRegions = ["US", "CA"];
 
-  // Regions
+  // Regions — one per country so each gets its own currency.
+  // US and Canada are tax-exclusive by convention (tax added at checkout).
   logger.info("Seeding region data...");
   const { result: regionResult } = await createRegionsWorkflow(container).run({
     input: {
       regions: [
         {
-          name: "North America",
+          name: "United States",
           currency_code: "usd",
-          countries: ["us", "ca"],
-          is_tax_inclusive: true,
+          countries: ["us"],
+          is_tax_inclusive: false,
         },
         {
-          name: "Europe",
-          currency_code: "eur",
-          countries: ["de", "dk", "se", "gb"],
-          is_tax_inclusive: true,
+          name: "Canada",
+          currency_code: "cad",
+          countries: ["ca"],
+          is_tax_inclusive: false,
         },
       ],
     },
@@ -86,7 +88,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
             is_default: true,
           },
           {
-            currency_code: "eur",
+            currency_code: "cad",
           },
         ],
         default_sales_channel_id: salesChannelResult[0].id,
@@ -100,6 +102,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
   await createTaxRegionsWorkflow(container).run({
     input: countriesInRegions.map((country_code) => ({
       country_code,
+      // Without a provider, tax calculation (e.g. adding to cart) throws.
+      provider_id: "tp_system",
     })),
   });
   logger.info("Tax region data seeded.");
@@ -154,7 +158,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
   await linkSalesChannelsToStockLocationWorkflow(container).run({
     input: {
       id: stockLocationResult[0].id,
-      add: salesChannelResult.map((sc) => sc.id),
+      add: salesChannelResult.map((sc: any) => sc.id),
     },
   });
   logger.info("Sales channels linked to stock location.");
@@ -184,12 +188,12 @@ export default async function seedDemoData({ container }: ExecArgs) {
   );
   logger.info("Inventory items created.");
 
-  const inventoryItemIds = inventoryItems.flat().map((i) => i.id);
+  const inventoryItemIds = inventoryItems.flat().map((i: any) => i.id);
 
   // Create inventory levels
   await inventoryItemService.createInventoryLevels(
-    inventoryItemIds.flatMap((itemId) =>
-      stockLocationResult.map((location) => ({
+    inventoryItemIds.flatMap((itemId: any) =>
+      stockLocationResult.map((location: any) => ({
         location_id: location.id,
         inventory_item_id: itemId,
         stocked_quantity: 100,
@@ -200,7 +204,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
 
   // Shipping options
   const fulfillmentSets = await Promise.all(
-    stockLocationResult.map(async (location) => {
+    stockLocationResult.map(async (location: any) => {
       const fulfillmentSet =
         await fulfillmentModuleService.createFulfillmentSets({
           name: `${location.name} Domestic`,
@@ -213,6 +217,10 @@ export default async function seedDemoData({ container }: ExecArgs) {
                   country_code: "us",
                   type: "country",
                 },
+                {
+                  country_code: "ca",
+                  type: "country",
+                },
               ],
             },
           ],
@@ -221,9 +229,6 @@ export default async function seedDemoData({ container }: ExecArgs) {
     })
   );
   logger.info("Fulfillment sets created.");
-
-  // Skip shipping options - manual provider not available in dev
-  logger.info("Skipping shipping options (manual provider not available).");
 
   // Publishable API key
   logger.info("Seeding publishable API key data...");
@@ -246,7 +251,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
   await linkSalesChannelsToApiKeyWorkflow(container).run({
     input: {
       id: publishableApiKeyResult[0].id,
-      add: salesChannelResult.map((sc) => sc.id),
+      add: salesChannelResult.map((sc: any) => sc.id),
     },
   });
   logger.info("Sales channels linked to API key.");
@@ -287,7 +292,12 @@ export default async function seedDemoData({ container }: ExecArgs) {
       description:
         "A timeless essential crafted from premium 100% cotton. Pre-shrunk, tailored fit with reinforced stitching. Built for everyday wear.",
       category_ids: [categoryResult[0].id],
-      images: [],
+      thumbnail:
+        "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=900&q=80",
+      images: [
+        { url: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=900&q=80" },
+        { url: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=900&q=80" },
+      ],
       options: [
         {
           title: "Size",
@@ -304,8 +314,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
           sku: "URB-TEE-BLK-S",
           options: { Size: "S", Color: "Black" },
           prices: [
-            { amount: 2999, currency_code: "usd" },
-            { amount: 2999, currency_code: "eur" },
+            { amount: 29.99, currency_code: "usd" },
+            { amount: 40.99, currency_code: "cad" },
           ],
         },
         {
@@ -313,8 +323,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
           sku: "URB-TEE-BLK-M",
           options: { Size: "M", Color: "Black" },
           prices: [
-            { amount: 2999, currency_code: "usd" },
-            { amount: 2999, currency_code: "eur" },
+            { amount: 29.99, currency_code: "usd" },
+            { amount: 40.99, currency_code: "cad" },
           ],
         },
         {
@@ -322,8 +332,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
           sku: "URB-TEE-BLK-L",
           options: { Size: "L", Color: "Black" },
           prices: [
-            { amount: 2999, currency_code: "usd" },
-            { amount: 2999, currency_code: "eur" },
+            { amount: 29.99, currency_code: "usd" },
+            { amount: 40.99, currency_code: "cad" },
           ],
         },
         {
@@ -331,8 +341,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
           sku: "URB-TEE-WHT-S",
           options: { Size: "S", Color: "White" },
           prices: [
-            { amount: 2999, currency_code: "usd" },
-            { amount: 2999, currency_code: "eur" },
+            { amount: 29.99, currency_code: "usd" },
+            { amount: 40.99, currency_code: "cad" },
           ],
         },
         {
@@ -340,8 +350,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
           sku: "URB-TEE-WHT-M",
           options: { Size: "M", Color: "White" },
           prices: [
-            { amount: 2999, currency_code: "usd" },
-            { amount: 2999, currency_code: "eur" },
+            { amount: 29.99, currency_code: "usd" },
+            { amount: 40.99, currency_code: "cad" },
           ],
         },
         {
@@ -349,8 +359,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
           sku: "URB-TEE-WHT-L",
           options: { Size: "L", Color: "White" },
           prices: [
-            { amount: 2999, currency_code: "usd" },
-            { amount: 2999, currency_code: "eur" },
+            { amount: 29.99, currency_code: "usd" },
+            { amount: 40.99, currency_code: "cad" },
           ],
         },
       ],
@@ -360,7 +370,12 @@ export default async function seedDemoData({ container }: ExecArgs) {
       description:
         "Heavyweight 400gsm French terry cotton hoodie. Oversized fit with dropped shoulders, kangaroo pocket, and double-layered hood.",
       category_ids: [categoryResult[1].id],
-      images: [],
+      thumbnail:
+        "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=900&q=80",
+      images: [
+        { url: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=900&q=80" },
+        { url: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=900&q=80" },
+      ],
       options: [
         {
           title: "Size",
@@ -377,8 +392,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
           sku: "URB-HOO-BLK-M",
           options: { Size: "M", Color: "Black" },
           prices: [
-            { amount: 7999, currency_code: "usd" },
-            { amount: 7999, currency_code: "eur" },
+            { amount: 79.99, currency_code: "usd" },
+            { amount: 109.99, currency_code: "cad" },
           ],
         },
         {
@@ -386,8 +401,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
           sku: "URB-HOO-BLK-L",
           options: { Size: "L", Color: "Black" },
           prices: [
-            { amount: 7999, currency_code: "usd" },
-            { amount: 7999, currency_code: "eur" },
+            { amount: 79.99, currency_code: "usd" },
+            { amount: 109.99, currency_code: "cad" },
           ],
         },
         {
@@ -395,8 +410,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
           sku: "URB-HOO-GRY-M",
           options: { Size: "M", Color: "Grey" },
           prices: [
-            { amount: 7999, currency_code: "usd" },
-            { amount: 7999, currency_code: "eur" },
+            { amount: 79.99, currency_code: "usd" },
+            { amount: 109.99, currency_code: "cad" },
           ],
         },
         {
@@ -404,8 +419,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
           sku: "URB-HOO-GRY-L",
           options: { Size: "L", Color: "Grey" },
           prices: [
-            { amount: 7999, currency_code: "usd" },
-            { amount: 7999, currency_code: "eur" },
+            { amount: 79.99, currency_code: "usd" },
+            { amount: 109.99, currency_code: "cad" },
           ],
         },
       ],
@@ -415,7 +430,12 @@ export default async function seedDemoData({ container }: ExecArgs) {
       description:
         "Slim-tapered joggers with articulated knees, zippered cargo pockets, and elasticated cuffs. Ripstop cotton blend for durability.",
       category_ids: [categoryResult[2].id],
-      images: [],
+      thumbnail:
+        "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=900&q=80",
+      images: [
+        { url: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=900&q=80" },
+        { url: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=900&q=80" },
+      ],
       options: [
         {
           title: "Size",
@@ -432,8 +452,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
           sku: "URB-JOG-BLK-M",
           options: { Size: "M", Color: "Black" },
           prices: [
-            { amount: 6999, currency_code: "usd" },
-            { amount: 6999, currency_code: "eur" },
+            { amount: 69.99, currency_code: "usd" },
+            { amount: 95.99, currency_code: "cad" },
           ],
         },
         {
@@ -441,18 +461,23 @@ export default async function seedDemoData({ container }: ExecArgs) {
           sku: "URB-JOG-BLK-L",
           options: { Size: "L", Color: "Black" },
           prices: [
-            { amount: 6999, currency_code: "usd" },
-            { amount: 6999, currency_code: "eur" },
+            { amount: 69.99, currency_code: "usd" },
+            { amount: 95.99, currency_code: "cad" },
           ],
         },
       ],
     },
     {
-      title: "URBN Snapback Cap",
+      title: "WDIS Snapback Cap",
       description:
         "Structured six-panel snapback with flat brim and embroidered logo. Adjustable snap closure for a custom fit.",
       category_ids: [categoryResult[3].id],
-      images: [],
+      thumbnail:
+        "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=900&q=80",
+      images: [
+        { url: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=900&q=80" },
+        { url: "https://images.unsplash.com/photo-1521369909029-2afed882baee?w=900&q=80" },
+      ],
       options: [
         {
           title: "Color",
@@ -465,8 +490,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
           sku: "URB-CAP-BLK-OS",
           options: { Color: "Black" },
           prices: [
-            { amount: 3499, currency_code: "usd" },
-            { amount: 3499, currency_code: "eur" },
+            { amount: 34.99, currency_code: "usd" },
+            { amount: 47.99, currency_code: "cad" },
           ],
         },
         {
@@ -474,8 +499,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
           sku: "URB-CAP-WHT-OS",
           options: { Color: "White" },
           prices: [
-            { amount: 3499, currency_code: "usd" },
-            { amount: 3499, currency_code: "eur" },
+            { amount: 34.99, currency_code: "usd" },
+            { amount: 47.99, currency_code: "cad" },
           ],
         },
       ],
@@ -485,7 +510,12 @@ export default async function seedDemoData({ container }: ExecArgs) {
       description:
         "Compact 20L backpack with padded 15\" laptop sleeve, organizer pockets, and water-resistant coating. Clean minimalist design.",
       category_ids: [categoryResult[3].id],
-      images: [],
+      thumbnail:
+        "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=900&q=80",
+      images: [
+        { url: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=900&q=80" },
+        { url: "https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?w=900&q=80" },
+      ],
       options: [
         {
           title: "Color",
@@ -498,8 +528,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
           sku: "URB-BKP-BLK-OS",
           options: { Color: "Black" },
           prices: [
-            { amount: 8999, currency_code: "usd" },
-            { amount: 8999, currency_code: "eur" },
+            { amount: 89.99, currency_code: "usd" },
+            { amount: 122.99, currency_code: "cad" },
           ],
         },
       ],
@@ -517,6 +547,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
             status: "published",
             images: product.images,
             options: product.options,
+            sales_channels: salesChannelResult.map((sc: any) => ({ id: sc.id })),
             variants: product.variants.map((variant) => ({
               title: variant.title,
               sku: variant.sku,
@@ -528,7 +559,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
                   if (v.sku === variant.sku) {
                     return {
                       inventory_item_id:
-                        inventoryItems.flat().find((i) => i.sku === v.sku)?.id,
+                        inventoryItems.flat().find((i: any) => i.sku === v.sku)?.id,
                       required_quantity: 1,
                     };
                   }
@@ -546,14 +577,8 @@ export default async function seedDemoData({ container }: ExecArgs) {
     logger.info(`Product "${product.title}" seeded.`);
   }
 
-  // Link products to sales channel
-  logger.info("Linking products to sales channel...");
-  const productService = container.resolve(Modules.PRODUCT);
-  const allProducts = await productService.listProducts({}, { relations: ["sales_channels"] });
-  for (const product of allProducts) {
-    await productService.addProductsToSalesChannel(salesChannelResult.map((sc) => sc.id), [product.id]);
-  }
-  logger.info("Products linked to sales channel.");
+  // Stripe on regions, fulfillment links, shipping options, product profiles.
+  await setupCheckout(container);
 
   logger.info("Seed data complete!");
 }

@@ -1,6 +1,7 @@
 import type { MedusaProduct } from "@ecommerce/types";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils/format-price";
+import { getLowestPrice, getHighestPrice } from "@/lib/utils/price";
 
 interface ProductInfoProps {
   product: MedusaProduct;
@@ -17,28 +18,28 @@ export function ProductInfo({ product }: ProductInfoProps) {
         {product.collection && (
           <Badge variant="default">{product.collection.title}</Badge>
         )}
-        {product.type && <Badge variant="ghost">{product.type.value}</Badge>}
-        {product.tags.map((tag) => (
-          <Badge key={tag.id} variant="ghost" size="sm">
+        {product.type && <Badge variant="accent">{product.type.value}</Badge>}
+        {(product.tags ?? []).map((tag) => (
+          <Badge key={tag.id} variant="accent" size="sm">
             {tag.value}
           </Badge>
         ))}
       </div>
 
       {/* Title */}
-      <h1 className="text-3xl md:text-4xl font-display font-bold text-text mb-3">
+      <h1 className="text-brutal text-4xl md:text-6xl text-black mb-4 break-words">
         {product.title}
       </h1>
 
       {/* Subtitle */}
       {product.subtitle && (
-        <p className="text-lg text-text-muted mb-4">{product.subtitle}</p>
+        <p className="text-sm font-bold uppercase tracking-widest text-muted mb-4">{product.subtitle}</p>
       )}
 
       {/* Price */}
       <div className="mb-6">
         {lowestPrice !== null && (
-          <span className="text-2xl font-display font-bold text-text">
+          <span className="inline-block bg-accent text-black border-[3px] border-black px-3 py-1 text-2xl md:text-3xl font-black tracking-tight shadow-[4px_4px_0_0_#EC69D4] -rotate-1">
             {lowestPrice === highestPrice
               ? formatPrice(lowestPrice)
               : `${formatPrice(lowestPrice)} – ${formatPrice(highestPrice!)}`}
@@ -48,36 +49,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
       {/* Description */}
       {product.description && (
-        <div className="prose prose-invert prose-sm max-w-none text-text-muted">
+        <div className="text-sm md:text-base font-medium leading-relaxed text-black/75 max-w-prose">
           {product.description}
         </div>
       )}
     </div>
   );
-}
-
-function getLowestPrice(
-  variants: MedusaProduct["variants"]
-): number | null {
-  if (!variants || variants.length === 0) return null;
-  let lowest = Infinity;
-  for (const v of variants) {
-    for (const p of v.prices) {
-      if (p.currency_code === "usd" && p.amount < lowest) lowest = p.amount;
-    }
-  }
-  return lowest === Infinity ? null : lowest;
-}
-
-function getHighestPrice(
-  variants: MedusaProduct["variants"]
-): number | null {
-  if (!variants || variants.length === 0) return null;
-  let highest = -Infinity;
-  for (const v of variants) {
-    for (const p of v.prices) {
-      if (p.currency_code === "usd" && p.amount > highest) highest = p.amount;
-    }
-  }
-  return highest === -Infinity ? null : highest;
 }

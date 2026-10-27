@@ -1,485 +1,191 @@
-# URBN — Premium Ecommerce Store
+# WDIS — Ecommerce Store
 
-A production-ready ecommerce storefront built with **Next.js 15**, **Medusa.js v2**, **Convex**, and **Stripe**. Features a bold, urban design aesthetic with smooth animations, real-time inventory, and a scalable monorepo architecture.
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-- **Node.js** >= 20.0.0
-- **npm** >= 10.0.0
-- **Docker** & **Docker Compose** (for local database and Redis)
-- **Git**
-
-You'll also need accounts for:
-- **Stripe** ([stripe.com](https://stripe.com)) - for payment processing
-- **Convex** ([convex.dev](https://convex.dev)) - for real-time features
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/Jourizar/medusa_ecommerce_wdis.git ecommerce-store
-cd ecommerce-store
-```
-
-### 2. Install Dependencies
-
-```bash
-npm install
-```
-
-This will install all dependencies for the monorepo (storefront, medusa-backend, and shared packages).
-
-### 3. Configure Environment Variables
-
-#### Frontend (.env.local)
-
-Create the frontend environment file:
-
-```bash
-cd apps/storefront
-cp .env.example .env.local
-```
-
-Edit `apps/storefront/.env.local`:
-
-```env
-NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:9000
-NEXT_PUBLIC_CONVEX_URL=https://your-project.convex.cloud
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_key
-JWT_SECRET=<generate-with:-openssl-rand--base64-32>
-NEXTAUTH_SECRET=<generate-with:-openssl-rand--base64-32>
-NEXTAUTH_URL=http://localhost:3000
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
-```
-
-#### Medusa Backend (.env)
-
-Create the backend environment file:
-
-```bash
-cd apps/medusa-backend
-cp .env.example .env
-```
-
-Edit `apps/medusa-backend/.env`:
-
-```env
-DATABASE_URL=postgresql://medusa:medusa_password@localhost:5432/medusa
-REDIS_URL=redis://localhost:6379
-MEDUSA_BACKEND_URL=http://localhost:9000
-JWT_SECRET=<same-as-frontend>
-COOKIE_SECRET=<generate-random-string>
-STORE_CORS=http://localhost:3000
-ADMIN_CORS=http://localhost:5173,http://localhost:9000
-AUTH_CORS=http://localhost:3000
-STRIPE_API_KEY=sk_test_your_stripe_key
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
-CONVEX_URL=https://your-project.convex.cloud
-CONVEX_ADMIN_KEY=your_convex_admin_key
-```
-
-> **Note:** Generate secure secrets using:
-> ```bash
-> # Windows (PowerShell)
-> [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))
-> 
-> # Linux/Mac
-> openssl rand -base64 32
-> ```
-
-### 4. Start Infrastructure (PostgreSQL & Redis)
-
-From the project root, start Docker Compose:
-
-```bash
-docker compose up -d
-```
-
-This will start:
-- **PostgreSQL** on port 5432
-- **Redis** on port 6379
-- **Medusa Backend** on port 9000
-
-Wait for the services to be healthy (usually ~30 seconds for first setup).
-
-### 5. Run Database Migrations
-
-```bash
-cd apps/medusa-backend
-npm run migrations:run
-cd ../..
-```
-
-### 6. Seed Initial Data (Optional)
-
-Populate your store with sample products and data:
-
-```bash
-cd apps/medusa-backend
-npm run seed
-cd ../..
-```
-
-### 7. Setup Convex (Real-time Features)
-
-From the storefront directory, initialize Convex:
-
-```bash
-cd apps/storefront
-npx convex dev
-```
-
-This will:
-- Prompt you to login/create a Convex project
-- Deploy your Convex schema
-- Start the Convex dev server
-
-### 8. Start the Development Server
-
-From the project root:
-
-```bash
-npm run dev
-```
-
-This starts all applications concurrently using Turborepo:
-- **Storefront:** http://localhost:3000
-- **Medusa Backend:** http://localhost:9000
-- **Medusa Admin:** http://localhost:5173 (auto-opened)
+A headless ecommerce store built with **Next.js 15** and **Medusa.js v2**, with
+**Stripe** payments. Runs as a Docker Compose stack on a single VPS behind
+Caddy (automatic HTTPS).
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-┌──────────────────┐       HTTPS/REST       ┌──────────────────┐
-│   Next.js 15     │◄──────────────────────►│   Medusa.js v2   │
-│   (Storefront)   │                        │   (Commerce)     │
-│   - App Router   │                        │   - Products     │
-│   - RSC + SSR    │                        │   - Carts        │
-│   - Tailwind v4  │                        │   - Orders       │
-│   - Framer Motion│                        │   - Stripe       │
-└────────┬─────────┘                        └────────┬─────────┘
-         │                                           │
-   WebSocket/WSS                              PostgreSQL + Redis
-         │
-┌────────┴─────────┐
-│   Convex         │
-│   (Real-time)    │
-│   - Inventory    │
-│   - Analytics    │
-│   - Wishlist     │
-│   - Notifications│
-└──────────────────┘
+                    ┌───────────────────── VPS (docker compose) ─────────────────────┐
+                    │                                                                 │
+  https://DOMAIN ───┼──►  Caddy  ──►  storefront (Next.js :3000)                      │
+                    │       │              │  server-side calls (internal network)    │
+  https://api.DOMAIN┼───────┴──────►  medusa (API + admin /app :9000)                 │
+                    │                       │                                         │
+                    │                 postgres :5432      redis :6379                 │
+                    └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Service Boundaries
+| Concern                                    | Where it lives                           |
+| ------------------------------------------ | ---------------------------------------- |
+| Products, variants, pricing, cart, orders  | Medusa                                   |
+| Payments                                   | Medusa Stripe provider + Stripe Elements |
+| Customer accounts                          | Medusa emailpass auth, via NextAuth      |
+| Home calendar, hero carousel, seasons      | Custom Medusa modules (edited in admin)  |
+| Product images                             | Medusa local file storage (`/static`)    |
 
-| Domain | Service |
-|---|---|
-| Products, variants, pricing | Medusa.js |
-| Cart, checkout, orders | Medusa.js |
-| Payment processing | Medusa.js + Stripe |
-| Real-time inventory | Convex (synced from Medusa) |
-| Analytics & events | Convex |
-| User profiles, wishlist | Convex |
-
----
+Only Caddy is exposed to the internet (ports 80/443). Postgres, Redis, Medusa
+and Next.js talk over the private Compose network.
 
 ## Tech Stack
 
-- **Frontend:** Next.js 15 (App Router), TypeScript, Tailwind CSS v4, Framer Motion
-- **Commerce Backend:** Medusa.js v2
-- **Real-time Data:** Convex
-- **Payments:** Stripe
-- **Auth:** NextAuth.js + JWT (Medusa customer auth)
-- **State Management:** Zustand (cart)
-- **Monorepo:** Turborepo + npm workspaces
-- **Deployment:** Vercel (frontend), Railway/Docker (Medusa), Convex Cloud
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js >= 20
-- npm >= 10
-- Docker & Docker Compose (for local Medusa development)
-- A Convex account ([convex.dev](https://convex.dev))
-- A Stripe account ([stripe.com](https://stripe.com))
-
-### 1. Clone & Install
-
-```bash
-git clone <your-repo-url> ecommerce-store
-cd ecommerce-store
-npm install
-```
-
-### 2. Configure Environment Variables
-
-**Frontend** (`apps/storefront/.env.local`):
-```env
-NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:9000
-NEXT_PUBLIC_CONVEX_URL=https://your-project.convex.cloud
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-JWT_SECRET=<generate-with: openssl rand -base64 32>
-NEXTAUTH_SECRET=<generate-with: openssl rand -base64 32>
-NEXTAUTH_URL=http://localhost:3000
-STRIPE_WEBHOOK_SECRET=whsec_...
-```
-
-**Medusa Backend** (`apps/medusa-backend/.env`):
-```env
-DATABASE_URL=postgresql://medusa:medusa_password@localhost:5432/medusa
-REDIS_URL=redis://localhost:6379
-MEDUSA_BACKEND_URL=http://localhost:9000
-JWT_SECRET=<same-as-frontend>
-COOKIE_SECRET=<generate-random-string>
-STORE_CORS=http://localhost:3000
-ADMIN_CORS=http://localhost:5173,http://localhost:9000
-AUTH_CORS=http://localhost:3000
-STRIPE_API_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-CONVEX_URL=https://your-project.convex.cloud
-CONVEX_ADMIN_KEY=your_convex_admin_key
-```
-
-### 3. Start Local Infrastructure
-
-```bash
-# Start PostgreSQL, Redis, and Medusa via Docker Compose
-docker compose up -d
-```
-
-### 4. Run Medusa Migrations
-
-```bash
-cd apps/medusa-backend
-npm run migrations:run
-cd ../..
-```
-
-### 5. Deploy Convex Functions
-
-```bash
-cd apps/storefront
-npx convex dev  # Starts Convex dev server + deploys schema
-cd ../..
-```
-
-### 6. Start the Frontend
-
-```bash
-npm run dev
-```
-
-This starts:
-- **Storefront:** `http://localhost:3000`
-- **Medusa Backend:** `http://localhost:9000`
-- **Medusa Admin:** `http://localhost:5173` (if running separately)
-
----
+- **Storefront:** Next.js 15 (App Router, ISR), React 19, TypeScript, Tailwind CSS 3, Framer Motion, Zustand
+- **Commerce backend:** Medusa.js v2 (PostgreSQL 16, Redis 7)
+- **Payments:** Stripe (Payment Element; Apple Pay / Google Pay / Link via automatic payment methods)
+- **Auth:** NextAuth (credentials) backed by Medusa customer auth
+- **Infra:** Docker Compose, Caddy, npm workspaces + Turborepo
 
 ## Project Structure
 
 ```
-ecommerce-store/
+.
 ├── apps/
-│   ├── storefront/              # Next.js frontend
-│   │   ├── src/
-│   │   │   ├── app/             # App Router pages
-│   │   │   ├── components/      # UI components
-│   │   │   │   ├── ui/          # Primitive design system
-│   │   │   │   ├── layout/      # Navbar, Footer
-│   │   │   │   ├── product/     # Product components
-│   │   │   │   ├── cart/        # Cart components
-│   │   │   │   ├── home/        # Home page sections
-│   │   │   │   └── account/     # User dashboard
-│   │   │   ├── lib/             # Utilities & API clients
-│   │   │   │   ├── medusa/      # Medusa API client
-│   │   │   │   ├── convex/      # Convex wrappers
-│   │   │   │   └── utils/       # Helpers (cn, formatPrice)
-│   │   │   ├── hooks/           # Custom React hooks
-│   │   │   ├── providers/       # Context providers
-│   │   │   └── styles/          # Animation variants
-│   │   ├── convex/              # Convex schema & functions
-│   │   └── .env.example
-│   │
-│   └── medusa-backend/          # Medusa.js v2
-│       ├── src/
-│       │   ├── api/             # Custom API routes
-│       │   ├── subscribers/     # Event subscribers
-│       │   └── modules/         # Custom modules
+│   ├── storefront/            # Next.js storefront
+│   │   ├── src/app/           # Routes: home, products, art, cart, checkout, account, login/signup
+│   │   ├── src/components/    # UI, layout, product, cart, home, art, season
+│   │   ├── src/lib/medusa/    # Store API client
+│   │   └── Dockerfile
+│   └── medusa-backend/        # Medusa v2 backend
+│       ├── src/modules/       # calendar, carousel, season (custom modules + migrations)
+│       ├── src/api/           # Custom admin + store API routes
+│       ├── src/admin/routes/  # Admin dashboard pages (art, calendar, carousel, seasons)
+│       ├── src/subscribers/   # Event subscribers
+│       ├── src/scripts/       # seed, seed-art, seed-shipping, setup-checkout
 │       ├── medusa-config.ts
-│       └── .env.example
-│
+│       └── Dockerfile
 ├── packages/
-│   ├── types/                   # Shared TypeScript types
-│   └── config/                  # Shared tsconfig, eslint
-│
-├── docker-compose.yml           # Local dev infrastructure
-├── turbo.json                   # Turborepo config
-└── package.json
+│   ├── types/                 # Shared TypeScript types
+│   └── config/                # Shared tsconfig / eslint
+├── deploy/                    # Caddyfile + server setup, deploy and backup scripts
+├── docker-compose.yml         # Local dev: Postgres, Redis, Medusa
+├── docker-compose.prod.yml    # Production stack
+└── .env.production.example    # Production settings template
 ```
 
 ---
 
-## Key Features
+## Local Development
 
-### Storefront
-- **Home page:** Animated hero, featured products, category cards, newsletter signup
-- **Product listing:** SSR with ISR caching, filters (price), sorting, pagination
-- **Product detail:** Image gallery with zoom, variant selection, real-time stock check, add-to-cart
-- **Cart:** Zustand-based state, slide-out drawer, quantity controls, persistent via cookie
-- **Checkout:** Server Action flow → Medusa cart → Stripe hosted checkout
-- **User dashboard:** Profile, order history, order detail
-
-### Real-time (Convex)
-- **Inventory sync:** Medusa subscriber pushes stock changes to Convex → live updates in browser
-- **Analytics:** Event tracking (views, cart adds, purchases) with dashboard queries
-- **Wishlist:** User-saved products with real-time sync
-- **Notifications:** Order updates, back-in-stock alerts
-
-### Design System
-- **Typography:** Inter (body) + Space Grotesk (display)
-- **Colors:** Dark theme with violet primary (#6D28D9) and amber accent (#F59E0B)
-- **Components:** Button (4 variants), Card (glass-morphism), Modal, Input, Badge, Pagination, Skeleton
-- **Animations:** Framer Motion throughout — hero parallax, staggered reveals, hover lift, page transitions
-
----
-
-## Deployment
-
-### Frontend → Vercel
-
-1. Connect your repo to Vercel
-2. Set root directory to `apps/storefront`
-3. Add all environment variables from `.env.example`
-4. Deploy
-
-### Medusa Backend → Railway
-
-1. Create a Railway project with PostgreSQL addon
-2. Add Redis addon
-3. Deploy via Dockerfile or Railway native Node.js
-4. Set environment variables
-5. Run migrations: `npx medusa migrations run`
-
-### Convex → Convex Cloud
+**Prerequisites:** Node.js 20 (see `.nvmrc`), npm 10+, Docker, a Stripe account.
 
 ```bash
-cd apps/storefront
-npx convex deploy
-npx convex dev  # For development
+npm install
+
+# Env files
+cp apps/medusa-backend/.env.example apps/medusa-backend/.env
+cp apps/storefront/.env.example apps/storefront/.env.local
+
+# Postgres + Redis
+docker compose up -d postgres redis
+
+# Database
+cd apps/medusa-backend
+npm run db:migrate
+npm run seed              # regions, sales channel, stock location, demo products
+npm run setup:checkout    # Stripe on regions + shipping options
+npx medusa user -e admin@example.com -p supersecret
+cd ../..
+
+# Run everything
+npm run dev
 ```
 
----
+- Storefront: http://localhost:3000
+- Medusa API: http://localhost:9000
+- Medusa admin: http://localhost:9000/app
 
-## Design Tokens
+After the first run, create a publishable key in the admin
+(Settings → Publishable API Keys), put it in both `*_PUBLISHABLE_KEY`
+variables in `apps/storefront/.env.local`, and restart the storefront.
 
-| Token | Value | Usage |
-|---|---|---|
-| `--color-primary` | `#6D28D9` | CTAs, links, active states |
-| `--color-accent` | `#F59E0B` | Highlights, sale badges |
-| `--color-bg` | `#0F0F0F` | Page background |
-| `--color-surface` | `#1A1A2E` | Cards, elevated surfaces |
-| `--color-text` | `#F1F1F1` | Primary text |
-| `--color-text-muted` | `#A0A0B0` | Secondary text |
+For local Stripe webhooks: `cd apps/medusa-backend && npm run stripe:listen`,
+then copy the printed signing secret into `STRIPE_WEBHOOK_SECRET`.
 
----
-
-## Development Scripts
+### Scripts
 
 ```bash
 npm run dev          # Start all apps (turbo)
 npm run build        # Build all apps
-npm run lint         # Lint all apps
-npm run type-check   # TypeScript type checking
+npm run lint         # Lint
+npm run type-check   # TypeScript checks
 ```
 
-Per-app:
-```bash
-cd apps/storefront && npm run dev
-cd apps/medusa-backend && npm run dev
-```
+Backend (`apps/medusa-backend`): `db:migrate`, `migrations:generate`, `seed`,
+`seed:art`, `setup:checkout`, `stripe:listen`.
 
 ---
 
-## Future Enhancements
+## Deployment (VPS)
 
-- [ ] Full NextAuth integration with Medusa customer creation flow
-- [ ] Stripe Elements embedded checkout (vs hosted)
-- [ ] Search with Algolia/Meilisearch integration
-- [ ] Multi-region / multi-currency support
-- [ ] i18n with Next.js internationalization
-- [ ] Headless CMS (Sanity/Contentful) for blog/marketing content
-- [ ] Email notifications (Resend/SendGrid) via Medusa notification module
-- [ ] Admin analytics dashboard page
-- [ ] PWA support (service worker, offline cart)
-- [ ] E2E tests with Playwright
+The whole stack runs from `docker-compose.prod.yml` on one Ubuntu 24.04 VPS
+(4 GB RAM). Caddy terminates HTTPS; the store is served at `https://DOMAIN` and
+Medusa (API + admin at `/app`) at `https://api.DOMAIN`.
+
+1. **DNS** — point `DOMAIN`, `www.DOMAIN` and `api.DOMAIN` (A records) at the VPS IP.
+2. **Server setup** (as root, once): `bash deploy/setup-server.sh` — Docker,
+   firewall, swap, automatic updates, daily backups.
+3. **Clone and configure**:
+   ```bash
+   git clone https://git.altusanimi.dev/jurizar/wdis_production.git /opt/wdis && cd /opt/wdis
+   cp .env.production.example .env.production   # fill in; secrets: openssl rand -base64 32
+   bash deploy/deploy.sh
+   ```
+   Leave `MEDUSA_PUBLISHABLE_KEY` empty on this first run. Migrations run
+   automatically when the Medusa container starts.
+4. **Create an admin user and seed the store**:
+   ```bash
+   COMPOSE="docker compose -f docker-compose.prod.yml --env-file .env.production"
+   $COMPOSE exec medusa npx medusa user -e you@example.com -p '<strong-password>'
+   $COMPOSE exec medusa npx medusa exec ./src/scripts/seed.js            # regions, sales channel, stock location
+   $COMPOSE exec medusa npx medusa exec ./src/scripts/setup-checkout.js  # Stripe + shipping options
+   ```
+5. **Publishable key** — sign in at `https://api.DOMAIN/app`, go to
+   Settings → Publishable API Keys, copy the key (linked to your sales channel)
+   into `MEDUSA_PUBLISHABLE_KEY`, then run `bash deploy/deploy.sh` again. The
+   storefront bakes this key in at build time, so every change needs a rebuild.
+6. **Stripe webhook** — in the Stripe dashboard add the endpoint
+   `https://api.DOMAIN/hooks/payment/stripe_stripe`, put its signing secret in
+   `STRIPE_WEBHOOK_SECRET`, and redeploy.
+
+Use Stripe test keys (`pk_test_` / `sk_test_`) until a full test order goes
+through, then switch to live keys and redeploy.
+
+### Updating
+
+Push to the repo, then on the server:
+
+```bash
+cd /opt/wdis && bash deploy/deploy.sh
+```
+
+### Backups
+
+`deploy/backup.sh` runs daily at 03:30 (cron, installed by `setup-server.sh`)
+and writes the database dump and uploaded images to `/opt/wdis/backups`,
+keeping 14 days. Copy them off the server regularly. Restore instructions are
+at the top of `deploy/backup.sh`.
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
-### Common Issues
+**Storefront shows no products** — the publishable key is missing or not
+linked to the sales channel your products are in. Fix it in the admin, update
+the env, and rebuild the storefront.
 
-**Docker containers won't start:**
-```bash
-# Check if ports are already in use
-netstat -ano | findstr :5432
-netstat -ano | findstr :6379
-netstat -ano | findstr :9000
+**CORS errors** — `STORE_CORS` / `AUTH_CORS` must match the storefront URL
+exactly (scheme and host, no trailing slash).
 
-# Kill processes using those ports or change ports in docker-compose.yml
-```
+**Checkout has no shipping options** — run the `setup-checkout` script; it is
+safe to re-run.
 
-**Database connection errors:**
-```bash
-# Ensure PostgreSQL is healthy before running migrations
-docker compose ps
-# Wait until postgres shows "healthy" status
-```
-
-**Medusa migrations fail:**
-```bash
-# Reset database (WARNING: deletes all data)
-cd apps/medusa-backend
-npx medusa db:migrate reset
-npm run migrations:run
-```
-
-**Convex won't connect:**
-- Ensure `NEXT_PUBLIC_CONVEX_URL` matches your Convex project URL
-- Run `npx convex dev` from `apps/storefront` directory
-- Check that Convex schema is deployed: `npx convex deploy`
-
-**Stripe webhook errors:**
-- Use Stripe CLI for local webhook testing: `stripe listen --forward-to localhost:9000/webhooks/stripe`
-- Update `STRIPE_WEBHOOK_SECRET` with the signing secret from Stripe CLI
-
-**CORS errors:**
-- Verify `STORE_CORS` in Medusa `.env` matches your frontend URL
-- Ensure both services are running on the correct ports
+**Logs** — `docker compose -f docker-compose.prod.yml --env-file .env.production logs -f medusa storefront`
 
 ---
 
-## 📞 Support
-
-For issues, questions, or contributions:
-- Open an issue on [GitHub](https://github.com/Jourizar/medusa_ecommerce_wdis/issues)
-- Check the [Medusa.js Documentation](https://docs.medusajs.com/v2)
-- Check the [Next.js Documentation](https://nextjs.org/docs)
-
----
-
-## 📄 License
+## License
 
 MIT

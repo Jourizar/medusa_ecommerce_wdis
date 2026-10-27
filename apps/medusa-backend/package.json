@@ -1,8 +1,8 @@
 {
   "name": "@ecommerce/medusa-backend",
   "version": "0.1.0",
-  "description": "Medusa.js v2 commerce backend with Stripe and Convex sync",
-  "author": "URBN",
+  "description": "Medusa.js v2 commerce backend with Stripe",
+  "author": "WDIS",
   "license": "MIT",
   "keywords": [
     "medusa",
@@ -15,6 +15,9 @@
     "build": "medusa build",
     "start": "medusa start",
     "seed": "medusa exec ./src/scripts/seed.ts",
+    "seed:art": "medusa exec ./src/scripts/seed-art.ts",
+    "setup:checkout": "medusa exec ./src/scripts/setup-checkout.ts",
+    "stripe:listen": "stripe listen --forward-to localhost:9000/hooks/payment/stripe_stripe",
     "db:setup": "medusa db:setup",
     "db:migrate": "medusa db:migrate",
     "migrations:run": "medusa db:migrate",
@@ -24,15 +27,12 @@
   "dependencies": {
     "@medusajs/admin-sdk": "^2.0.0",
     "@medusajs/cli": "^2.0.0",
+    "@medusajs/draft-order": "^2.17.2",
     "@medusajs/framework": "^2.0.0",
     "@medusajs/medusa": "^2.0.0",
-    "@mikro-orm/core": "^6.6.12",
-    "@mikro-orm/knex": "^6.6.12",
-    "@mikro-orm/migrations": "^6.6.12",
-    "@mikro-orm/postgresql": "^6.6.12",
     "awilix": "^8.0.1",
-    "convex": "^1.18.0",
-    "pg": "^8.13.0"
+    "pg": "^8.13.0",
+    "sharp": "^0.33.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
