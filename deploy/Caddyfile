@@ -5,8 +5,20 @@
 	email {$ACME_EMAIL}
 }
 
+# Security headers shared by every site.
+(security_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
+
 # Storefront
 {$DOMAIN} {
+	import security_headers
 	encode zstd gzip
 	reverse_proxy storefront:3000
 
@@ -22,6 +34,7 @@ www.{$DOMAIN} {
 
 # Medusa API, admin dashboard (/app) and uploaded images (/static)
 api.{$DOMAIN} {
+	import security_headers
 	encode zstd gzip
 	request_body max_size 12MB
 	reverse_proxy medusa:9000
