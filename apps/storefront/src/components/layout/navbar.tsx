@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { motion, useAnimationControls, useReducedMotion } from "framer-motion";
@@ -39,15 +38,6 @@ export function Navbar() {
     prevCount.current = itemCount;
   }, [itemCount, cartControls, reduce]);
 
-  // public/assets/cloud_logo.png may be missing — fall back to the wordmark.
-  // The ref check catches errors that fired before hydration attached onError.
-  const logoRef = useRef<HTMLImageElement>(null);
-  const [logoFailed, setLogoFailed] = useState(false);
-  useEffect(() => {
-    const img = logoRef.current;
-    if (img?.complete && img.naturalWidth === 0) setLogoFailed(true);
-  }, []);
-
   return (
     <>
       <header className="sticky top-0 z-40 bg-cream border-b-[4px] border-black">
@@ -59,25 +49,12 @@ export function Navbar() {
               aria-label={`${SITE_NAME} — home`}
               className="inline-flex items-center hover:-rotate-2 transition-transform duration-150"
             >
-              {logoFailed ? (
-                <span
-                  className="text-brutal text-4xl md:text-5xl text-accent"
-                  style={{ WebkitTextStroke: "2px #000" }}
-                >
-                  {SITE_NAME}
-                </span>
-              ) : (
-                <Image
-                  ref={logoRef}
-                  src="/assets/cloud_logo.png"
-                  alt={SITE_NAME}
-                  width={300}
-                  height={240}
-                  priority
-                  onError={() => setLogoFailed(true)}
-                  className="h-14 md:h-16 w-auto"
-                />
-              )}
+              <span
+                className="text-brutal text-4xl md:text-5xl text-accent"
+                style={{ WebkitTextStroke: "2px #000" }}
+              >
+                {SITE_NAME}
+              </span>
             </Link>
 
             {/* Desktop nav */}
