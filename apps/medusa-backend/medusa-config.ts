@@ -114,7 +114,25 @@ export default defineConfig({
     {
       resolve: "@medusajs/medusa/notification",
       options: {
-        providers: [],
+        // Order confirmation / welcome emails over SMTP. Off until SMTP_HOST
+        // is set; sends are then skipped and logged.
+        providers: process.env.SMTP_HOST
+          ? [
+              {
+                resolve: "./src/modules/smtp-notification",
+                id: "smtp",
+                options: {
+                  channels: ["email"],
+                  host: process.env.SMTP_HOST,
+                  port: Number(process.env.SMTP_PORT || 465),
+                  user: process.env.SMTP_USER,
+                  pass: process.env.SMTP_PASS,
+                  from: process.env.SMTP_FROM || process.env.SMTP_USER,
+                  ordersBcc: process.env.SMTP_ORDERS_BCC || undefined,
+                },
+              },
+            ]
+          : [],
       },
     },
     {

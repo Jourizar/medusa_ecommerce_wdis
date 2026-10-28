@@ -71,6 +71,15 @@ services:
       COOKIE_SECRET: ${COOKIE_SECRET}
       STRIPE_API_KEY: ${STRIPE_API_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      # Links in emails point here.
+      STORE_URL: https://${DOMAIN}
+      # Order confirmation / welcome emails. Leave SMTP_HOST empty to disable.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_ORDERS_BCC: ${SMTP_ORDERS_BCC:-}
     volumes:
       - medusa_static:/app/server/static
     depends_on:
