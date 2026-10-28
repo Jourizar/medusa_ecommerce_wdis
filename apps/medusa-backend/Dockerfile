@@ -24,7 +24,7 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 # Hoisted workspace deps; Node resolves them by walking up from the server dir.
-COPY --from=build /app/node_modules ./node_modules
+COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build /app/apps/medusa-backend/.medusa/server ./server
 COPY apps/medusa-backend/docker-entrypoint.sh /usr/local/bin/
 
