@@ -10,6 +10,8 @@ import { SEASON_THEMES, isSeasonTheme } from "./themes";
 // Only downloaded when a season is actually showing.
 const SeasonParticles = dynamic(() => import("./season-particles").then((m) => m.SeasonParticles), { ssr: false });
 const SeasonGarland = dynamic(() => import("./season-garland").then((m) => m.SeasonGarland), { ssr: false });
+const SeasonLights = dynamic(() => import("./season-lights").then((m) => m.SeasonLights), { ssr: false });
+const SeasonSnowflakes = dynamic(() => import("./season-snowflakes").then((m) => m.SeasonSnowflakes), { ssr: false });
 
 const PREVIEW_KEY = "wdis-season-preview";
 
@@ -56,10 +58,14 @@ export function SeasonEffects({ season }: { season: ActiveSeason | null }) {
 
   return (
     <>
-      {active.decorations && <SeasonGarland garland={visuals.garland} />}
-      {particlesHere && (
-        <SeasonParticles kind={visuals.particle} colors={visuals.colors} intensity={active.intensity} />
-      )}
+      {active.decorations &&
+        (visuals.lights ? <SeasonLights /> : <SeasonGarland garland={visuals.garland} />)}
+      {particlesHere &&
+        (visuals.particle === "snowflake" ? (
+          <SeasonSnowflakes intensity={active.intensity} />
+        ) : (
+          <SeasonParticles kind={visuals.particle} colors={visuals.colors} intensity={active.intensity} />
+        ))}
     </>
   );
 }

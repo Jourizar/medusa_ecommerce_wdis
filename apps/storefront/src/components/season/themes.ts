@@ -1,6 +1,7 @@
 import type { SeasonTheme } from "@/lib/medusa/season";
 
-export type ParticleKind = "snow" | "leaf" | "heart" | "confetti" | "petal";
+/** "snowflake" is the falling ❄ glyph layer; the rest are drawn on canvas. */
+export type ParticleKind = "snow" | "snowflake" | "leaf" | "heart" | "confetti" | "petal";
 
 export type ThemeVisuals = {
   particle: ParticleKind;
@@ -11,13 +12,16 @@ export type ThemeVisuals = {
     ornament: "bauble" | "pennant" | "heart" | "star" | "egg";
     colors: string[];
   };
+  /** Twinkling light rope in place of the SVG garland */
+  lights?: boolean;
 };
 
 export const SEASON_THEMES: Record<SeasonTheme, ThemeVisuals> = {
   christmas: {
-    particle: "snow",
+    particle: "snowflake",
     colors: ["#ffffff"],
     garland: { string: "#1f5c2e", ornament: "bauble", colors: ["#d7263d", "#f2c14e", "#51D6FF", "#EC69D4"] },
+    lights: true,
   },
   halloween: {
     particle: "leaf",
