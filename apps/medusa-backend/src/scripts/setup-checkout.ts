@@ -19,13 +19,16 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils";
 
 const STRIPE_PROVIDER_ID = "pp_stripe_stripe";
 const FULFILLMENT_PROVIDER_ID = "manual_manual";
-const COUNTRIES = ["us", "ca"];
 
 export default async function setupCheckoutScript({ container }: ExecArgs) {
   await setupCheckout(container);
 }
 
-export async function setupCheckout(container: MedusaContainer) {
+/** `countries` sets the shipping zone; shipping prices are kept only for `currencies`. */
+export async function setupCheckout(
+  container: MedusaContainer,
+  { countries = ["us", "ca"], currencies = ["usd", "cad"] } = {}
+) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
   const query = container.resolve(ContainerRegistrationKeys.QUERY);
   const link = container.resolve(ContainerRegistrationKeys.LINK);
@@ -109,7 +112,7 @@ export async function setupCheckout(container: MedusaContainer) {
           service_zones: [
             {
               name,
-              geo_zones: COUNTRIES.map((country_code) => ({
+              geo_zones: countries.map((country_code) => ({
                 country_code,
                 type: "country" as const,
               })),
@@ -138,13 +141,13 @@ export async function setupCheckout(container: MedusaContainer) {
       shipping_profile_id: profile.id,
       provider_id: FULFILLMENT_PROVIDER_ID,
       price_type: "flat" as const,
+      // Per-currency price lists below are filtered to the store's currencies.
       rules: [
         { attribute: "enabled_in_store", value: "true", operator: "eq" as const },
         { attribute: "is_return", value: "false", operator: "eq" as const },
       ],
     };
-    await createShippingOptionsWorkflow(container).run({
-      input: [
+    const options = [
         {
           ...base,
           name: "Standard Shipping",
@@ -153,8 +156,8 @@ export async function setupCheckout(container: MedusaContainer) {
             { currency_code: "usd", amount: 8 },
             { currency_code: "cad", amount: 11 },
             // Free over $100 / C$137, matching the storefront banner.
-            { currency_code: "usd", amount: 0, rules: [{ attribute: "item_total", operator: "gte", value: 100 }] },
-            { currency_code: "cad", amount: 0, rules: [{ attribute: "item_total", operator: "gte", value: 137 }] },
+            { currency_code: "usd", amount: 0, rules: [{ attribute: "item_total", operator: "gte" as const, value: 100 }] },
+            { currency_code: "cad", amount: 0, rules: [{ attribute: "item_total", operator: "gte" as const, value: 137 }] },
           ],
         },
         {
@@ -166,7 +169,12 @@ export async function setupCheckout(container: MedusaContainer) {
             { currency_code: "cad", amount: 27 },
           ],
         },
-      ],
+    ];
+    await createShippingOptionsWorkflow(container).run({
+      input: options.map((o) => ({
+        ...o,
+        prices: o.prices.filter((p) => currencies.includes(p.currency_code)),
+      })),
     });
     logger.info(`Shipping options created for "${location.name}".`);
   }

@@ -441,7 +441,8 @@ function AddressStep({
           >
             <option value="">Select…</option>
             {getRegionsForCountry(address.country_code).map((r) => (
-              <option key={r.code} value={r.code}>
+              // ISO 3166-2 ("us-in"): what Medusa tax regions and pickup zones match on.
+              <option key={r.code} value={`${address.country_code}-${r.code}`.toLowerCase()}>
                 {r.name}
               </option>
             ))}

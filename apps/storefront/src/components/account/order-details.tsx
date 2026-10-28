@@ -88,7 +88,7 @@ export function OrderDetails({ order }: { order: MedusaOrder }) {
                 )}
                 <br />
                 {address.city}
-                {address.province ? `, ${address.province.toUpperCase()}` : ""} {address.postal_code}
+                {address.province ? `, ${address.province.replace(/^[a-z]{2}-/i, "").toUpperCase()}` : ""} {address.postal_code}
                 <br />
                 {address.country_code?.toUpperCase()}
               </address>

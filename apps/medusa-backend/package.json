@@ -17,6 +17,7 @@
     "seed": "medusa exec ./src/scripts/seed.ts",
     "seed:art": "medusa exec ./src/scripts/seed-art.ts",
     "setup:checkout": "medusa exec ./src/scripts/setup-checkout.ts",
+    "setup:us-store": "medusa exec ./src/scripts/setup-us-store.ts",
     "stripe:listen": "stripe listen --forward-to localhost:9000/hooks/payment/stripe_stripe",
     "db:setup": "medusa db:setup",
     "db:migrate": "medusa db:migrate",
