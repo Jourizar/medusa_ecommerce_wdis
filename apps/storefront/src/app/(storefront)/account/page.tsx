@@ -4,6 +4,7 @@ import { getCustomerForToken, getMedusaToken } from "@/lib/auth";
 import { getOrders } from "@/lib/medusa/orders";
 import { OrderHistory } from "@/components/account/order-history";
 import { ProfileCard } from "@/components/account/profile-card";
+import { WelcomeBanner } from "@/components/account/welcome-banner";
 
 export const metadata: Metadata = {
   title: "My Account",
@@ -21,6 +22,8 @@ export default async function AccountPage() {
 
   return (
     <div className="max-w-container mx-auto px-4 py-10">
+      <WelcomeBanner name={customer.first_name ?? ""} />
+
       <h1 className="text-brutal text-5xl md:text-6xl text-black mb-8">
         MY{" "}
         <span className="bg-accent px-3 inline-block border-[5px] border-black -rotate-1">

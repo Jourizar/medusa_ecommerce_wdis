@@ -63,7 +63,13 @@ export function AuthForm({ mode }: AuthFormProps) {
         return;
       }
 
-      router.push(callbackUrl);
+      // Landing on the account page shows a welcome banner; other callbacks
+      // (e.g. checkout) are left alone so the shopper isn't pulled away.
+      router.push(
+        callbackUrl === "/account"
+          ? `/account?welcome=${mode === "signup" ? "new" : "back"}`
+          : callbackUrl
+      );
       router.refresh();
     } finally {
       setBusy(false);
